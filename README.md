@@ -59,14 +59,14 @@ BENCHMARK_AND_EXPERIMENT_PLAN.md
 
 ```text
 Implementation: IN_PROGRESS
-Active Card: C01
-Next Allowed Card: C01
-Execution Authorization: GRANTED_FOR_C01_ONLY
-Baseline Readiness: IN_PROGRESS
+Active Card: NONE
+Next Allowed Card: C02
+Execution Authorization: NOT_GRANTED
+Baseline Readiness: COMPLETE
 Benchmark Evidence: NONE YET
 ```
 
-C01 requires explicit human approval before execution.
+Each Card requires explicit human approval before execution. Next Allowed Card indicates sequence eligibility only.
 
 ## Important Boundary
 

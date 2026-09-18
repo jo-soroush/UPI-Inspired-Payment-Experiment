@@ -164,7 +164,7 @@ The following are Card-specific optional fields and are required when materially
 
 ## Status
 
-`IN_PROGRESS`
+`COMPLETE`
 
 ## Goal
 
@@ -401,21 +401,20 @@ C01 passes only when:
 
 ## C01 Phase 1 Self-Audit
 
-`READY_FOR_INDEPENDENT_AUDIT`
+`READY_FOR_INDEPENDENT_AUDIT` (Phase 1 state)
 
-The C01-only baseline is implemented and validated. C01 remains `IN_PROGRESS`; independent audit and explicit delivery approval are still required before completion or Git delivery.
-
-Known limitation: the repository remains uncommitted and baseline files remain untracked, as required for this phase. The first committed baseline belongs to controlled C01 delivery after independent audit and explicit approval.
+The C01-only baseline was independently audited with a passing result. Controlled delivery subsequently completed the C01 baseline and recorded the final Git metadata below.
 
 ## C01 Controlled Delivery Preparation
 
 Independent C01 audit: `PASS`
 C01 Exit Gate: `PASS`
 Pre-delivery validation: `PASS`
-Delivery status: `READY_FOR_DELIVERY`
+Delivery status: `COMPLETE`
 Delivery branch: `main` (the repository has no canonical branch requirement and no configured remote)
 Pre-delivery base: `NONE` (the repository has no prior `HEAD`)
-Commit SHA: `NOT YET CREATED`
+Commit SHA: `f4fafcf77f43fe137a9b12398f1995f60dacea19`
+Post-delivery validation: `PASS`
 
 Files included in the controlled C01 baseline:
 
@@ -480,6 +479,12 @@ We would add controlled dependency locking, continuous integration, and producti
 ### What did this Card teach us?
 
 A small, evidence-backed package/configuration baseline can establish implementation readiness without prematurely implementing payment-system functionality.
+
+## C01 Completion Checklist Result
+
+All applicable C01 completion items passed: goal, rationale, architecture/design record, alternatives, actual implementation, files changed, problems and fixes, tests and recorded results, security review, known limitations, evidence artifacts, Git metadata, learning record, and Exit Gate.
+
+The first controlled delivery commit is `f4fafcf77f43fe137a9b12398f1995f60dacea19` on `main`. No remote, pull request, or merge exists because the repository has no configured remote.
 
 ---
 
@@ -1579,9 +1584,9 @@ At the time this file is updated after C01 Phase 1 validation:
 ```text
 Roadmap: DEFINED
 Technical baseline: DEFINED
-Implementation evidence: C01 PHASE 1 RECORDED
+Implementation evidence: C01 DELIVERED
 Benchmark evidence: NONE YET
-Cards complete: 0 / 9
+Cards complete: 1 / 9
 ```
 
-The remaining Cards are still unstarted. Planned evidence requirements remain defined in advance, while the C01 evidence above records only results produced during this Phase 1 implementation.
+The remaining Cards are still unstarted. Planned evidence requirements remain defined in advance, while the C01 evidence above records only results produced during C01 implementation, audit, and controlled delivery.
