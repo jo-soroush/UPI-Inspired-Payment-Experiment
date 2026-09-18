@@ -413,7 +413,8 @@ Pre-delivery validation: `PASS`
 Delivery status: `COMPLETE`
 Delivery branch: `main` (the repository has no canonical branch requirement and no configured remote)
 Pre-delivery base: `NONE` (the repository has no prior `HEAD`)
-Commit SHA: `f4fafcf77f43fe137a9b12398f1995f60dacea19`
+Initial C01 baseline commit: `f4fafcf77f43fe137a9b12398f1995f60dacea19`
+C01 delivery evidence/state commit: `67dd21b7d1e8d94de230fc9cbb32bac1ca5f4b5c`
 Post-delivery validation: `PASS`
 
 Files included in the controlled C01 baseline:
@@ -432,7 +433,7 @@ src/upi_payment_experiment/__init__.py
 tests/test_c01_baseline.py
 ```
 
-No ignored or runtime artifacts are included. No configured remote exists, so push, pull request, and merge delivery steps are not applicable to this initial baseline.
+No ignored or runtime artifacts are included. No configured remote exists, so push, pull request, and merge delivery steps are not applicable to this initial baseline. Current repository `HEAD` is determined from Git and is not duplicated as a permanent evidence field because later documentation commits would change it.
 
 ## C01 Learning Record
 
@@ -484,7 +485,7 @@ A small, evidence-backed package/configuration baseline can establish implementa
 
 All applicable C01 completion items passed: goal, rationale, architecture/design record, alternatives, actual implementation, files changed, problems and fixes, tests and recorded results, security review, known limitations, evidence artifacts, Git metadata, learning record, and Exit Gate.
 
-The first controlled delivery commit is `f4fafcf77f43fe137a9b12398f1995f60dacea19` on `main`. No remote, pull request, or merge exists because the repository has no configured remote.
+The initial controlled C01 baseline commit is `f4fafcf77f43fe137a9b12398f1995f60dacea19` on `main`. The subsequent C01 delivery evidence/state commit is `67dd21b7d1e8d94de230fc9cbb32bac1ca5f4b5c`. No remote, pull request, or merge exists because the repository has no configured remote.
 
 ---
 
