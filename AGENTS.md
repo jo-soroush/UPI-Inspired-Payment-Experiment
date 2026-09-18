@@ -462,6 +462,10 @@ Do not reconstruct this information later from memory.
 
 Update it while the Card is fresh.
 
+## 11a. Live Project-State Ownership
+
+`PROJECT_CONTROL.md` owns mutable live execution state. Other documents may record historical or per-Card evidence, but must not duplicate mutable global fields such as Active Card, authorization, blocker, or Next Allowed Card. When live status is needed elsewhere, reference `PROJECT_CONTROL.md`.
+
 ---
 
 # 12. Benchmark Evidence Rule

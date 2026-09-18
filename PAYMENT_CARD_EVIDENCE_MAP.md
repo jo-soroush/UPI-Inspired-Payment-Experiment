@@ -493,7 +493,7 @@ The initial controlled C01 baseline commit is `f4fafcf77f43fe137a9b12398f1995f60
 
 ## Status
 
-`NOT_STARTED`
+`IN_PROGRESS`
 
 ## Goal
 
@@ -504,6 +504,21 @@ Define one ledger-independent payment domain shared by both implementations.
 A fair comparison requires both ledgers to operate on the same business concepts.
 
 Without common models, the conventional and blockchain implementations could accidentally implement different systems.
+
+## Approved C02 Design Decision
+
+The approved `PaymentStatus` vocabulary is exactly:
+
+```text
+PENDING
+SUCCESS
+FAILED
+UNKNOWN
+```
+
+C02 defines this vocabulary only. Runtime transition behavior, retry and failure semantics, lost-response reconciliation, and safety enforcement remain later-Card concerns, primarily C04 and C07.
+
+The implementation uses frozen standard-library dataclasses, a standard-library `Enum` for `PaymentStatus`, explicit `datetime` values, string identifiers, and integer minor-unit money. This keeps the domain ledger-independent without adding a dependency.
 
 ## Planned domain objects
 
@@ -586,19 +601,67 @@ Prefer explicit models first because clarity matters more than premature abstrac
 
 ## Actual implementation
 
-`NOT YET EXECUTED`
+Implemented the C02 ledger-independent domain module in `src/upi_payment_experiment/domain.py` with:
+
+- `Customer`
+- `Merchant`
+- `Account`
+- `Payment`
+- `Transaction`
+- `PaymentStatus`
+- `LedgerResult`
+
+The models validate required identifiers, supported `SEK`, integer minor-unit balances and amounts, positive payment amounts, explicit statuses, and explicit timestamps. `Transaction.transaction_id` is required; `LedgerResult.transaction_id` may be absent for an unresolved `UNKNOWN` result. No transition engine or runtime idempotency behavior was implemented.
+
+Files created:
+
+```text
+src/upi_payment_experiment/domain.py
+tests/test_c02_domain_models.py
+```
+
+Files modified for C02 state/evidence:
+
+```text
+PROJECT_CONTROL.md
+README.md
+PAYMENT_CARD_EVIDENCE_MAP.md
+```
+
+`pyproject.toml` was not modified; standard-library domain modeling was sufficient.
 
 ## Problems encountered
 
-`NOT YET EXECUTED`
+The first standalone import validation command omitted the configured `src` import path.
+
+Root cause: the validation command did not apply the supported source-layout path.
+
+Fix: reran the import validation with `src` explicitly on `sys.path`; the implementation and full test suite then passed.
 
 ## Tests
 
-`NOT YET EXECUTED`
+Executed validations:
+
+```text
+.venv/bin/python -m compileall -q src tests          PASS
+domain import/status validation                      PASS
+.venv/bin/python -m pytest                           PASS — 16 collected, 16 passed
+.venv/bin/python -m pytest tests/test_c02_domain_models.py
+                                                       PASS — 13 collected, 13 passed
+.venv/bin/python -m pip check                        PASS — no broken requirements
+project configuration validation                     PASS
+secret-hygiene and .gitignore validation             PASS
+ledger-independence review                           PASS
+C03+/later-Card scope scan                           PASS
+canonical-document consistency review               PASS
+```
 
 ## Evidence artifacts
 
-`NOT YET EXECUTED`
+The C02 implementation and test files are the evidence artifacts. No persistence, API, QR, UI, blockchain, benchmark, or production artifacts were created.
+
+Branch used: `main`.
+Git delivery: pending; no `git add`, commit, push, PR, or merge was performed.
 
 ## Exit Gate
 
@@ -606,6 +669,95 @@ Prefer explicit models first because clarity matters more than premature abstrac
 - invalid money values are rejected
 - tests pass
 - no database-specific or blockchain-specific concerns leak into core models
+
+## C02 Phase 1 Self-Audit
+
+`READY_FOR_INDEPENDENT_AUDIT`
+
+The C02-only domain models and focused tests are implemented and validated. C02 remains `IN_PROGRESS`; independent audit and explicit delivery approval are still required before completion or Git delivery.
+
+## C02 Learning Record — Phase 1
+
+### What did we build?
+
+We built seven frozen, ledger-independent domain models and focused tests for their canonical validations.
+
+### Why did we build it this way?
+
+Standard-library dataclasses and an enum provide the required domain clarity without coupling C02 to FastAPI, persistence, or either ledger implementation.
+
+### What did we initially misunderstand?
+
+The first standalone import check omitted the source-layout path, even though the project configuration supports `src` imports for tests.
+
+### What failed?
+
+That first validation command failed to import the package. No implementation or test assertion failed.
+
+### Why did it fail?
+
+The command did not add `src` to the import path.
+
+### How was it fixed?
+
+The check was rerun with the supported `src` path explicitly configured.
+
+### What other design could have been used?
+
+Pydantic models could be used later if an API boundary requires them, but the current C02 scope does not require that dependency.
+
+### What trade-off did we accept?
+
+The models intentionally do not provide persistence, transition orchestration, or runtime safety behavior; those concerns remain with later Cards.
+
+### What test proves the result?
+
+The C02-specific suite collected 13 tests and passed all 13, while the full suite collected 16 tests and passed all 16.
+
+### What would we do differently in a production payment system?
+
+We would separately specify and review lifecycle transitions, serialization contracts, persistence boundaries, and operational error handling.
+
+### What did this Card teach us?
+
+A small immutable domain layer can preserve payment semantics across future ledgers while keeping implementation-specific behavior outside the core models, including unresolved results that do not yet have an execution identity.
+
+## C02 Independent Audit and Remediation Record
+
+The independent C02 audit initially returned `FAIL`.
+
+Root cause 1: this Evidence Map contained a duplicated mutable global status snapshot in its former global status section. The statement that the remaining Cards were unstarted became stale when C02 moved to `IN_PROGRESS`, even though `PROJECT_CONTROL.md` already owned live execution state.
+
+Root cause 2: C02 validation coverage had been recorded at category level, but the tests did not directly exercise every required identifier and currency validation path. In particular, direct evidence was missing for empty `payment_id`, empty `merchant_id`, empty `idempotency_key`, Account identifiers, Transaction identifiers, and unsupported Payment currency.
+
+Remediation:
+
+- removed the duplicated mutable global status snapshot and replaced it with a durable evidence-oriented index that refers to `PROJECT_CONTROL.md` for live execution state;
+- added the live project-state ownership rule to `AGENTS.md`;
+- added direct C02 tests for the identified identifier, Payment currency, and status-validation paths;
+- preserved `domain.py` unchanged because its C02 validations already covered the required behavior;
+- kept C02 `IN_PROGRESS` and Git delivery pending.
+
+The remediation validation results are recorded below after execution. This failure and remediation are retained as C02 engineering evidence rather than hidden.
+
+## C02 Remediation Validation
+
+```text
+.venv/bin/python -m compileall -q src tests          PASS
+package importability with configured src path       PASS
+domain import/status validation                       PASS
+.venv/bin/pytest                                     PASS — 19 collected, 19 passed
+.venv/bin/pytest tests/test_c02_domain_models.py     PASS — 16 collected, 16 passed
+.venv/bin/python -m pip check                        PASS — no broken requirements
+project configuration validation                     PASS
+ledger-independence review                           PASS
+secret-hygiene and .gitignore validation             PASS
+C03+/later-Card scope scan                           PASS
+canonical-document consistency review               PASS
+live-state ownership scan                            PASS
+```
+
+The direct-test additions cover empty required identifiers across the C02 models, unsupported Payment currency, explicit `PaymentStatus` validation across status-bearing models, boolean account balances, and explicit datetime validation. No implementation change was required.
 
 ---
 
@@ -1578,16 +1730,12 @@ This section is mandatory because the project is intended not only as a demo, bu
 
 ---
 
-# 17. Current Evidence Status
+# 17. Evidence Record Index
 
-At the time this file is updated after C01 Phase 1 validation:
+Evidence recorded:
 
-```text
-Roadmap: DEFINED
-Technical baseline: DEFINED
-Implementation evidence: C01 DELIVERED
-Benchmark evidence: NONE YET
-Cards complete: 1 / 9
-```
+- C01 delivery evidence is recorded in the C01 section above.
+- C02 Phase 1 implementation and remediation evidence is recorded in the C02 section above.
+- Benchmark evidence: `NONE YET`.
 
-The remaining Cards are still unstarted. Planned evidence requirements remain defined in advance, while the C01 evidence above records only results produced during C01 implementation, audit, and controlled delivery.
+Planned evidence requirements remain defined in advance. Live execution state is owned by `PROJECT_CONTROL.md`; this Evidence Map intentionally does not duplicate mutable global fields such as Active Card, authorization, blocker, or Next Allowed Card.

@@ -12,11 +12,12 @@ It should stay short and current.
 ```text
 Project: UPI-Inspired Payment Experiment
 Overall Status: IN_PROGRESS
-Active Card: NONE
+Active Card: C02
 Last Completed Card: C01
 Next Allowed Card: C02
-Execution Authorization: NOT_GRANTED
-C02 Authorization: NOT_GRANTED
+Execution Authorization: GRANTED_FOR_C02_ONLY
+C02 Authorization: GRANTED_FOR_C02_ONLY
+C03 Authorization: NOT_GRANTED
 Current Branch: main
 Current Blocker: NONE
 Baseline Readiness: COMPLETE
@@ -33,7 +34,7 @@ Next Allowed Card indicates sequence eligibility only. Starting that Card still 
 | Card | Title | Status |
 |---|---|---|
 | C01 | Project Baseline & Experimental Design | COMPLETE |
-| C02 | Domain Models | NOT_STARTED |
+| C02 | Domain Models | IN_PROGRESS |
 | C03 | Conventional Ledger | NOT_STARTED |
 | C04 | Payment Safety & Failure Handling | NOT_STARTED |
 | C05 | QR Payment Initiation | NOT_STARTED |
@@ -140,6 +141,7 @@ Record only meaningful baseline changes.
 | Initial | Project control created | Establish execution baseline | Roadmap + evidence map + AGENTS.md |
 | 2026-09-18 | C01 started | Explicit human authorization for C01 Phase 1 | C01 pre-implementation check |
 | 2026-09-18 | C01 completed | Controlled initial baseline delivery | `f4fafcf77f43fe137a9b12398f1995f60dacea19` |
+| 2026-09-18 | C02 started | Explicit human authorization for C02 Phase 1 | C02 pre-implementation check |
 
 ---
 
