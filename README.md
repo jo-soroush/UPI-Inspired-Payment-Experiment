@@ -59,9 +59,9 @@ BENCHMARK_AND_EXPERIMENT_PLAN.md
 
 ```text
 Implementation: IN_PROGRESS
-Active Card: C02
-Next Allowed Card: C02
-Execution Authorization: GRANTED_FOR_C02_ONLY
+Active Card: NONE
+Next Allowed Card: C03
+Execution Authorization: NOT_GRANTED
 Baseline Readiness: COMPLETE
 Benchmark Evidence: NONE YET
 ```

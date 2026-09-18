@@ -12,11 +12,11 @@ It should stay short and current.
 ```text
 Project: UPI-Inspired Payment Experiment
 Overall Status: IN_PROGRESS
-Active Card: C02
-Last Completed Card: C01
-Next Allowed Card: C02
-Execution Authorization: GRANTED_FOR_C02_ONLY
-C02 Authorization: GRANTED_FOR_C02_ONLY
+Active Card: NONE
+Last Completed Card: C02
+Next Allowed Card: C03
+Execution Authorization: NOT_GRANTED
+C02 Authorization: NOT_GRANTED
 C03 Authorization: NOT_GRANTED
 Current Branch: main
 Current Blocker: NONE
@@ -34,7 +34,7 @@ Next Allowed Card indicates sequence eligibility only. Starting that Card still 
 | Card | Title | Status |
 |---|---|---|
 | C01 | Project Baseline & Experimental Design | COMPLETE |
-| C02 | Domain Models | IN_PROGRESS |
+| C02 | Domain Models | COMPLETE |
 | C03 | Conventional Ledger | NOT_STARTED |
 | C04 | Payment Safety & Failure Handling | NOT_STARTED |
 | C05 | QR Payment Initiation | NOT_STARTED |

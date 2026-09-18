@@ -660,8 +660,7 @@ canonical-document consistency review               PASS
 
 The C02 implementation and test files are the evidence artifacts. No persistence, API, QR, UI, blockchain, benchmark, or production artifacts were created.
 
-Branch used: `main`.
-Git delivery: pending; no `git add`, commit, push, PR, or merge was performed.
+At Phase 1 evidence capture, branch used: `main`. Git delivery was pending at that point; no `git add`, commit, push, PR, or merge had yet been performed.
 
 ## Exit Gate
 
@@ -674,7 +673,7 @@ Git delivery: pending; no `git add`, commit, push, PR, or merge was performed.
 
 `READY_FOR_INDEPENDENT_AUDIT`
 
-The C02-only domain models and focused tests are implemented and validated. C02 remains `IN_PROGRESS`; independent audit and explicit delivery approval are still required before completion or Git delivery.
+At the end of Phase 1, the C02-only domain models and focused tests were implemented and validated. C02 was then `IN_PROGRESS`; independent audit and explicit delivery approval were still required before completion or Git delivery.
 
 ## C02 Learning Record — Phase 1
 
@@ -758,6 +757,29 @@ live-state ownership scan                            PASS
 ```
 
 The direct-test additions cover empty required identifiers across the C02 models, unsupported Payment currency, explicit `PaymentStatus` validation across status-bearing models, boolean account balances, and explicit datetime validation. No implementation change was required.
+
+## C02 Final Audit and Delivery
+
+```text
+Independent initial audit: FAIL
+Remediation: COMPLETE
+Independent re-audit: PASS
+Exit Gate: PASS
+Delivery status: COMPLETE
+Delivery branch: main
+C02 delivery commit: 20098e9c4782d38137fb047711314c2b738de373
+Push result: PASS — origin/main contains the C02 delivery commit
+```
+
+The C02 completion checklist is satisfied:
+
+- goal, design rationale, alternatives, and actual implementation recorded;
+- files changed, initial audit failure, root causes, remediation, tests, results, and known limitations recorded;
+- Git delivery metadata and lessons learned recorded;
+- independent re-audit and Exit Gate passed;
+- delivery was pushed and C02 is complete.
+
+The C02 delivery commit above is the immutable Git reference for this Card. Current repository HEAD is determined from Git and is not duplicated as a permanent evidence field because later documentation commits would change it.
 
 ---
 
