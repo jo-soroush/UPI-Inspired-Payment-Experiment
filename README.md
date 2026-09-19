@@ -57,16 +57,9 @@ BENCHMARK_AND_EXPERIMENT_PLAN.md
 
 ## Current Status
 
-```text
-Implementation: IN_PROGRESS
-Active Card: NONE
-Next Allowed Card: C03
-Execution Authorization: NOT_GRANTED
-Baseline Readiness: COMPLETE
-Benchmark Evidence: NONE YET
-```
+Current Card status, sequence eligibility, blockers, and execution authorization are owned exclusively by `PROJECT_CONTROL.md`.
 
-Each Card requires explicit human approval before execution. Next Allowed Card indicates sequence eligibility only.
+Each Card requires explicit human approval before execution. Consult `PROJECT_CONTROL.md` for the current live state; a listed Next Allowed Card does not itself grant authorization.
 
 ## Important Boundary
 

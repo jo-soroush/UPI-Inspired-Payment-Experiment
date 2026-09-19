@@ -336,6 +336,45 @@ scalability characteristics
 
 Do not convert qualitative judgments into arbitrary numeric scores.
 
+# 14C. Differential Testing — C08
+
+C08 includes differential testing of normalized logical outcomes. This uses the existing shared application and ledger boundaries and does not change the architecture or Card structure.
+
+Canonical sequence:
+
+```text
+same canonical logical input
++ equivalent initial state
+→ run ConventionalLedger
+→ reset to equivalent state
+→ run BlockchainLedger
+→ normalize logical outcomes
+→ compare
+```
+
+Compare the applicable normalized outcomes:
+
+```text
+payment status
+payer balance delta
+merchant balance delta
+transaction/history linkage
+duplicate or replay logical outcome where applicable
+absence of partial transfer
+```
+
+Do not compare these implementation-specific values for equality:
+
+```text
+PostgreSQL row identifiers
+blockchain transaction hashes
+receipt or event metadata
+gas
+implementation-specific timing
+```
+
+Normalization must preserve business meaning without hiding a failure. Any logical-outcome mismatch must be retained as evidence with the canonical input, equivalent starting state, both raw outcomes, normalized outcomes, and comparison result. A mismatch invalidates the affected correctness comparison until explained and resolved or explicitly reported as an unresolved limitation.
+
 ---
 
 # 15. Evidence Storage

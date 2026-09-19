@@ -158,6 +158,31 @@ Exit Gate
 
 The following are Card-specific optional fields and are required when materially relevant: `Why now`, `Dependencies`, why alternatives were rejected, benchmark artifacts, security considerations, data correctness considerations, performance considerations, trade-offs, what the Card enables next, pull request, and final reviewer notes.
 
+## Verification Harness Record — C03 onward
+
+For C03 onward, each Card must add a compact verification record with:
+
+```text
+Canonical sources
+Derived Acceptance Contract
+Critical Invariants
+Verification Strategy
+Requirement / Invariant → Implementation → Test / Evidence → Result traceability
+Property / Invariant Testing applicability and result
+Mutation Testing applicability and result
+Independent Spec-Based Audit result
+```
+
+This record is evidence structure, not a new specification. Reference the applicable canonical clauses rather than copying them in full. Before implementation, only planned fields may be populated; implementation, test, result, and audit fields must remain `NOT YET EXECUTED`.
+
+Deterministic invariant tests are required where meaningful. Generated property testing and mutation testing are conditional. Any `NOT_APPLICABLE` entry must state a short reason. Live execution state remains owned exclusively by `PROJECT_CONTROL.md` and must not be duplicated here.
+
+A compact traceability table should use this form:
+
+| ID | Canonical requirement or invariant reference | Implementation evidence | Test or verification evidence | Result |
+|---|---|---|---|---|
+| `<Card>-Vnn` | Reference only | Planned or actual location | Planned or executed evidence | `NOT YET EXECUTED` or observed result |
+
 ---
 
 # 4. C01 — Project Baseline & Experimental Design
@@ -493,7 +518,7 @@ The initial controlled C01 baseline commit is `f4fafcf77f43fe137a9b12398f1995f60
 
 ## Status
 
-`IN_PROGRESS`
+`COMPLETE`
 
 ## Goal
 
@@ -846,7 +871,7 @@ Customer not debited
 READ COMMITTED transaction
 lock relevant account rows with SELECT ... FOR UPDATE
 lock rows in deterministic order
-validate balance and idempotency/payment state
+validate balance and C03-owned transaction state
 debit payer and credit merchant
 persist payment and transaction in one DB transaction
 COMMIT
@@ -857,6 +882,79 @@ On failure:
 ```text
 ROLLBACK
 ```
+
+## Verification Harness — PLANNED
+
+### Canonical sources
+
+- `UPI_PAYMENT_INTERVIEW_ROADMAP.md` — C03 goal, required behaviors, atomicity requirement, and Exit Gate
+- `ARCHITECTURE_AND_DECISIONS.md` — D03–D05, Payment Safety, and Atomicity and Failure Strategy
+- `AGENTS.md` — payment correctness, architecture guardrail, Card workflow, and Verification Harness
+- this C03 evidence record — planned design and evidence only
+
+### Derived Acceptance Contract — PLANNED
+
+The C03 Acceptance Contract is derived from the sources above. It covers the successful atomic transfer, correct final balances, payment and transaction persistence, transaction/history retrieval, and one controlled rollback proof. It does not replace or expand the canonical C03 Exit Gate.
+
+### Critical Invariants — PLANNED
+
+- a successful transfer applies the exact debit and credit in integer minor units;
+- the payer and merchant balance delta is conserved for the no-fee transfer;
+- payment and transaction records commit with the balance changes;
+- a controlled failure cannot leave a partial transfer or committed payment/transaction residue;
+- shared payment logic remains isolated from PostgreSQL-specific details behind the approved application and ledger boundaries.
+
+### Approved C03/C04 boundary
+
+C03 owns:
+
+```text
+successful atomic transfer
+correct balances
+payment and transaction persistence
+transaction and history retrieval
+one controlled rollback proof
+```
+
+C04 owns:
+
+```text
+idempotency
+duplicate payment handling
+comprehensive invalid-input handling
+already-completed behavior
+API conflict behavior
+comprehensive persistence-failure matrix
+```
+
+### Verification Strategy — PLANNED
+
+- applicable unit tests: planned where compact ledger-independent or mapping logic exists;
+- PostgreSQL integration tests: planned for commit, persistence, history, and controlled rollback behavior;
+- deterministic invariant tests: required for exact balance deltas, value conservation, and unchanged state after the controlled failure;
+- generated property testing: `NOT_APPLICABLE` initially because deterministic pytest cases are sufficient for the bounded C03 invariants;
+- mutation testing: conditional and not a C03 Exit Gate; no C03 run is planned unless compact high-risk pure logic provides concrete value. The first likely pilot remains C04.
+
+### Planned traceability
+
+| ID | Canonical requirement or invariant reference | Planned implementation evidence | Planned test or verification evidence | Result |
+|---|---|---|---|---|
+| C03-V01 | Roadmap C03 successful transfer and correct balances | C03 payment/ledger implementation | PostgreSQL integration plus deterministic balance-delta checks | `NOT YET EXECUTED` |
+| C03-V02 | Roadmap C03 persistence and history behavior | C03 payment/transaction persistence and retrieval paths | PostgreSQL persistence and history integration checks | `NOT YET EXECUTED` |
+| C03-V03 | Roadmap C03 consistency on failure; Architecture section 11 | C03 transaction boundary and controlled failure hook | Controlled rollback integration check with before/after state | `NOT YET EXECUTED` |
+| C03-V04 | Architecture D04–D05 and `AGENTS.md` architecture guardrail | Shared service/interface and PostgreSQL adapter boundaries | Architecture/import review plus applicable tests | `NOT YET EXECUTED` |
+
+### Property / Invariant Testing result
+
+`NOT YET EXECUTED`
+
+### Mutation Testing result
+
+`NOT YET EXECUTED`
+
+### Independent Spec-Based Audit result
+
+`NOT YET EXECUTED`
 
 ## Alternatives considered
 
@@ -1757,7 +1855,7 @@ This section is mandatory because the project is intended not only as a demo, bu
 Evidence recorded:
 
 - C01 delivery evidence is recorded in the C01 section above.
-- C02 Phase 1 implementation and remediation evidence is recorded in the C02 section above.
+- C02 Phase 1 implementation, initial independent audit failure, remediation, independent re-audit and Exit Gate PASS, implementation delivery (`20098e9c4782d38137fb047711314c2b738de373`), completion evidence/state (`cf4977b9e4364bd5dfef7b788fba7cd363b3affa`), and final delivery/completion record are recorded in the C02 section above.
 - Benchmark evidence: `NONE YET`.
 
 Planned evidence requirements remain defined in advance. Live execution state is owned by `PROJECT_CONTROL.md`; this Evidence Map intentionally does not duplicate mutable global fields such as Active Card, authorization, blocker, or Next Allowed Card.

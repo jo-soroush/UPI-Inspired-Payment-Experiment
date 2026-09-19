@@ -290,6 +290,44 @@ evidence
 
 For every Card use this bounded workflow:
 
+## Verification Harness — C03 onward
+
+From C03 onward, use this incremental verification path within the existing Card workflow:
+
+```text
+Canonical Card Specification
+→ Derived Acceptance Contract
+→ Applicable Critical Invariants
+→ Implementation
+→ Applicable Unit / Integration Tests
+→ Deterministic Invariant Tests
+→ Generated Property Tests only when justified
+→ Targeted Mutation Testing only when valuable
+→ Independent Spec-Based Audit
+→ Traceable Evidence
+→ Human Approval
+→ Controlled Delivery
+```
+
+The canonical specification remains in the applicable roadmap, architecture, benchmark, and governance documents. The Acceptance Contract is a concise derivation from those sources and must reference them; it must not become a competing specification.
+
+Before implementation, identify the Card's critical invariants where applicable and record the planned verification strategy in `PAYMENT_CARD_EVIDENCE_MAP.md`. Deterministic invariant tests are required where meaningful. Generated property testing and mutation testing are conditional and require a concrete benefit. A technique marked `NOT_APPLICABLE` must include a short reason. No technique is mandatory merely for ceremony.
+
+Traceability must connect each applicable requirement or invariant to implementation evidence, test or other verification evidence, and the observed result. Before execution, result fields must remain `NOT YET EXECUTED`.
+
+The independent audit must compare the completed Card against:
+
+```text
+canonical specification
+derived Acceptance Contract
+critical invariants
+requirement-to-test traceability
+executed evidence
+false-green risk
+```
+
+Card-specific acceptance criteria remain in their canonical sources and must not be copied into this section.
+
 ## Phase 1 — Implement + Self-Audit
 
 Perform the full Card implementation.
