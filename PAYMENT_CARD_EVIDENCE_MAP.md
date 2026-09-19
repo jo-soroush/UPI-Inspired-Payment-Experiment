@@ -1067,7 +1067,7 @@ The source, schema, Compose definition, and C03 integration tests listed above a
 
 Phase 1 branch: `main`.
 
-Git delivery: pending. No `git add`, commit, push, PR, or merge has been performed for C03.
+Git delivery: complete. Implementation delivery commit: `e626bc10eab7a33c5a03042e41a706d989168548`; push result: PASS — `origin/main` contains the commit. The completion-evidence documentation commit is intentionally not duplicated as a self-referential SHA.
 
 Known limitations retained for later Cards:
 
@@ -1113,7 +1113,9 @@ Blockers: NONE
 Exit Gate: PASS
 Human delivery approval: GRANTED
 Delivery status: COMPLETE
-Delivery commit SHA: RECORDED IN SUBSEQUENT COMPLETION-EVIDENCE COMMIT
+Implementation delivery commit: e626bc10eab7a33c5a03042e41a706d989168548
+Push result: PASS — `origin/main` contains the implementation delivery commit
+Completion evidence: this documentation-only record; its SHA is intentionally not duplicated
 ```
 
 ---
