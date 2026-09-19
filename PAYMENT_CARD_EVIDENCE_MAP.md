@@ -696,7 +696,7 @@ At Phase 1 evidence capture, branch used: `main`. Git delivery was pending at th
 
 ## C02 Phase 1 Self-Audit
 
-`READY_FOR_INDEPENDENT_AUDIT`
+`PASS — READY_FOR_DELIVERY`
 
 At the end of Phase 1, the C02-only domain models and focused tests were implemented and validated. C02 was then `IN_PROGRESS`; independent audit and explicit delivery approval were still required before completion or Git delivery.
 
@@ -790,7 +790,7 @@ Independent initial audit: FAIL
 Remediation: COMPLETE
 Independent re-audit: PASS
 Exit Gate: PASS
-Delivery status: COMPLETE
+Delivery status: APPROVED_FOR_DELIVERY
 Delivery branch: main
 C02 delivery commit: 20098e9c4782d38137fb047711314c2b738de373
 Push result: PASS — origin/main contains the C02 delivery commit
@@ -812,7 +812,7 @@ The C02 delivery commit above is the immutable Git reference for this Card. Curr
 
 ## Status
 
-`NOT_STARTED`
+`COMPLETE`
 
 ## Goal
 
@@ -944,17 +944,28 @@ comprehensive persistence-failure matrix
 | C03-V03 | Roadmap C03 consistency on failure; Architecture section 11 | C03 transaction boundary and controlled failure hook | Controlled rollback integration check with before/after state | `NOT YET EXECUTED` |
 | C03-V04 | Architecture D04–D05 and `AGENTS.md` architecture guardrail | Shared service/interface and PostgreSQL adapter boundaries | Architecture/import review plus applicable tests | `NOT YET EXECUTED` |
 
+### Executed traceability — Phase 1
+
+| ID | Requirement or invariant | Implementation evidence | Executed test or verification evidence | Observed result |
+|---|---|---|---|---|
+| C03-V01 | Successful atomic transfer; exact payer and merchant deltas; value conservation | `payment_service.py`; `ledger.py`; `conventional_ledger.py` transaction implementation | `test_successful_atomic_transfer_persists_and_is_retrievable` against PostgreSQL 16 | `PASS` — `100000/0` became `90000/10000`; deltas were `-10000/+10000`; total value remained `100000` |
+| C03-V02 | One successful Payment and one linked Transaction; history retrieval | `postgres_schema.sql`; `ConventionalLedger.get_payment`, `get_transaction`, and `list_transactions` | Successful-flow integration assertions plus fresh PostgreSQL reads | `PASS` — one `SUCCESS` Payment and one linked `SUCCESS` Transaction were retrieved |
+| C03-V03 | Failure inside the transaction leaves no partial balance or persistence residue | `ConventionalLedger.execute_payment`, explicit rollback, and `_after_payer_debit` test seam | `test_controlled_failure_rolls_back_all_state` using a fresh ledger connection after injected failure | `PASS` — balances remained `100000/0`; Payment and Transaction counts were both zero |
+| C03-V04 | PostgreSQL stays behind `LedgerInterface`; shared service and domain remain technology-neutral | `ledger.py`; `payment_service.py`; `conventional_ledger.py` | `test_postgresql_details_are_confined_to_the_adapter`; protected-file diff review | `PASS` — PostgreSQL/Psycopg references are confined to the adapter and integration test infrastructure |
+
 ### Property / Invariant Testing result
 
-`NOT YET EXECUTED`
+Deterministic invariant testing: `PASS`. The PostgreSQL integration test checks exact debit and credit deltas, no-fee value conservation, persisted-record agreement, and unchanged state after controlled rollback.
+
+Generated property testing: `NOT_APPLICABLE` for C03 Phase 1. The bounded invariants are covered directly with deterministic pytest assertions; no generated-test dependency was added.
 
 ### Mutation Testing result
 
-`NOT YET EXECUTED`
+`NOT_APPLICABLE` for C03 Phase 1. Mutation testing is conditional, is not a C03 Exit Gate, and remains deferred to the likely C04 pilot because C03's principal risk is PostgreSQL transaction behavior rather than compact pure branching logic.
 
 ### Independent Spec-Based Audit result
 
-`NOT YET EXECUTED`
+`PASS` — independent spec-based audit found no major findings, minor findings, or blockers.
 
 ## Alternatives considered
 
@@ -969,31 +980,141 @@ The experiment should compare blockchain against a credible transactional ledger
 
 ## Actual implementation
 
-`NOT YET EXECUTED`
+Implemented the shared `PaymentService → LedgerInterface → ConventionalLedger → PostgreSQL` path with:
+
+- a technology-neutral structural ledger interface;
+- a shared payment service that delegates without importing PostgreSQL details;
+- direct Psycopg 3 parameterized SQL with explicit `READ COMMITTED` isolation;
+- deterministic `SELECT ... FOR UPDATE` account locking;
+- atomic debit, credit, Payment persistence, and Transaction persistence;
+- explicit commit on success and rollback on exception;
+- Payment, Transaction, balance, and history retrieval mapped to C02 domain models;
+- a narrow protected failure seam used only for the controlled rollback proof;
+- an isolated PostgreSQL 16 Docker Compose service using a named volume and synthetic test data.
+
+Files created:
+
+```text
+compose.yaml
+src/upi_payment_experiment/ledger.py
+src/upi_payment_experiment/payment_service.py
+src/upi_payment_experiment/conventional_ledger.py
+src/upi_payment_experiment/postgres_schema.sql
+tests/test_c03_conventional_ledger.py
+```
+
+Files modified during C03 Phase 1:
+
+```text
+PROJECT_CONTROL.md
+PAYMENT_CARD_EVIDENCE_MAP.md
+pyproject.toml
+tests/test_c01_baseline.py
+```
+
+The C01 configuration assertion was updated only because the legitimate C03 runtime dependency means an empty runtime-dependency list is no longer a valid permanent baseline assertion. C02 domain implementation and tests were not changed.
 
 ## Problems encountered
 
-`NOT YET EXECUTED`
+The first full test run collected 22 tests. The 19 existing C01/C02 tests passed, while all three C03 tests stopped during fixture setup.
+
+Root cause: the fixture called `executemany()` on a Psycopg 3 `Connection`; that API belongs to `Cursor`.
+
+Fix: execute the fixture's parameterized seed batch through a cursor. The full suite was then rerun and all 22 tests passed. No production implementation defect or false successful result was hidden.
 
 ## Tests
 
-Must eventually include:
+Executed against the Compose-managed PostgreSQL 16 service:
 
 ```text
-successful transfer
-balance correctness
-rollback on failure
-transaction persistence
-history retrieval
+.venv/bin/python -m pytest -vv
+PASS — 22 collected, 22 passed
+
+.venv/bin/python -m pytest tests/test_c01_baseline.py -q
+PASS — 3 passed
+
+.venv/bin/python -m pytest tests/test_c02_domain_models.py -q
+PASS — 16 passed
+
+.venv/bin/python -m pytest tests/test_c03_conventional_ledger.py -q
+PASS — 3 passed
+
+.venv/bin/pip check
+PASS — no broken requirements
+
+docker compose ps
+PASS — PostgreSQL service healthy
+
+PostgreSQL default transaction isolation check
+PASS — read committed
+
+git diff --check
+PASS
+
+protected architecture/domain/test file diff review
+PASS — no changes
+
+C04 leakage scan
+PASS — idempotency key is persisted as opaque data only
+
+secret-pattern scan
+PASS — no findings
 ```
 
 ## Evidence artifacts
 
-`NOT YET EXECUTED`
+The source, schema, Compose definition, and C03 integration tests listed above are the Phase 1 evidence artifacts. Tests used synthetic data only. No benchmark result was produced.
+
+Phase 1 branch: `main`.
+
+Git delivery: pending. No `git add`, commit, push, PR, or merge has been performed for C03.
+
+Known limitations retained for later Cards:
+
+- idempotency, duplicate/replay handling, API conflicts, already-completed behavior, and the comprehensive failure matrix remain C04-owned;
+- C03 proves one controlled rollback point, not every persistence failure location;
+- concurrency correctness is implemented through row locks and deterministic ordering, but broad contention/stress evidence is outside the C03 acceptance contract;
+- local Docker PostgreSQL results are not production performance or durability claims.
 
 ## Exit Gate
 
 The full conventional payment flow works correctly and is covered by tests.
+
+Phase 1 self-assessment: `PASS`.
+
+C03 is ready for and approved for controlled delivery. Human delivery approval was granted after the independent audit PASS and Exit Gate PASS. The immutable delivery SHA is intentionally recorded only after the delivery commit exists.
+
+## C03 Phase 1 Self-Audit
+
+`READY_FOR_INDEPENDENT_AUDIT`
+
+- canonical Acceptance Contract: implemented and traced;
+- critical invariants: deterministic checks passed;
+- C03/C04 boundary: preserved;
+- architecture: unchanged and PostgreSQL isolated behind the ledger boundary;
+- C02 domain semantics: unchanged;
+- dependencies: only `psycopg[binary]>=3,<4` added;
+- SQL: parameterized for runtime data;
+- rollback and connection cleanup: exercised against PostgreSQL;
+- false-green review: assertions use exact state, record counts, identities, statuses, and fresh connections;
+- independent audit: `PASS` — no findings.
+
+## C03 Phase 1 Learning Record
+
+Direct Psycopg kept the conventional ledger small while still exercising PostgreSQL's real transaction semantics. The initial fixture failure reinforced that setup paths must be executed before any integration result can count as evidence; after correcting the cursor API, the complete suite was rerun rather than relying on partial results.
+
+## C03 Final Audit and Delivery Record
+
+```text
+Independent spec-based audit: PASS
+Major findings: NONE
+Minor findings: NONE
+Blockers: NONE
+Exit Gate: PASS
+Human delivery approval: GRANTED
+Delivery status: COMPLETE
+Delivery commit SHA: RECORDED IN SUBSEQUENT COMPLETION-EVIDENCE COMMIT
+```
 
 ---
 

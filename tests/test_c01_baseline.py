@@ -13,12 +13,12 @@ def test_package_is_importable() -> None:
     assert package.__doc__
 
 
-def test_project_configuration_declares_only_c01_test_dependency() -> None:
+def test_project_configuration_declares_expected_dependencies() -> None:
     with (ROOT / "pyproject.toml").open("rb") as config_file:
         config = tomllib.load(config_file)
 
     assert config["project"]["name"] == "upi-payment-experiment"
-    assert config["project"]["dependencies"] == []
+    assert config["project"]["dependencies"] == ["psycopg[binary]>=3,<4"]
     assert "pytest" in config["project"]["optional-dependencies"]["test"][0]
 
 
