@@ -696,7 +696,7 @@ At Phase 1 evidence capture, branch used: `main`. Git delivery was pending at th
 
 ## C02 Phase 1 Self-Audit
 
-`PASS — READY_FOR_DELIVERY`
+`PASS — READY_FOR_INDEPENDENT_AUDIT`
 
 At the end of Phase 1, the C02-only domain models and focused tests were implemented and validated. C02 was then `IN_PROGRESS`; independent audit and explicit delivery approval were still required before completion or Git delivery.
 
@@ -790,7 +790,7 @@ Independent initial audit: FAIL
 Remediation: COMPLETE
 Independent re-audit: PASS
 Exit Gate: PASS
-Delivery status: APPROVED_FOR_DELIVERY
+Delivery status: COMPLETE
 Delivery branch: main
 C02 delivery commit: 20098e9c4782d38137fb047711314c2b738de373
 Push result: PASS — origin/main contains the C02 delivery commit
@@ -1082,7 +1082,7 @@ The full conventional payment flow works correctly and is covered by tests.
 
 Phase 1 self-assessment: `PASS`.
 
-C03 is ready for and approved for controlled delivery. Human delivery approval was granted after the independent audit PASS and Exit Gate PASS. The immutable delivery SHA is intentionally recorded only after the delivery commit exists.
+The independent spec-based audit and Exit Gate subsequently passed, human delivery approval was granted, and controlled delivery completed. The immutable implementation delivery SHA is recorded in the C03 Final Audit and Delivery Record below.
 
 ## C03 Phase 1 Self-Audit
 
@@ -1101,7 +1101,49 @@ C03 is ready for and approved for controlled delivery. Human delivery approval w
 
 ## C03 Phase 1 Learning Record
 
-Direct Psycopg kept the conventional ledger small while still exercising PostgreSQL's real transaction semantics. The initial fixture failure reinforced that setup paths must be executed before any integration result can count as evidence; after correcting the cursor API, the complete suite was rerun rather than relying on partial results.
+### What did we build?
+
+We built the conventional-ledger path `PaymentService → LedgerInterface → ConventionalLedger → PostgreSQL`. It executes the C03 atomic payment flow, persists the successful Payment and linked Transaction, retrieves committed payment and transaction history, and provides one controlled rollback proof after a simulated failure inside the database transaction.
+
+### Why did we build it this way?
+
+PostgreSQL provides the conventional transactional control baseline required for the later blockchain comparison. Its ACID transaction semantics support atomic debit and credit, rollback on failure, and explicit concurrency control through row locking. This makes it a credible relational baseline rather than an intentionally weak comparison target. Direct Psycopg was sufficient for this bounded prototype because it kept the persistence layer small while exposing the PostgreSQL transaction and locking behavior that C03 needed to prove.
+
+### What did we initially misunderstand?
+
+The integration-test fixture initially attempted to call `executemany()` on a Psycopg 3 `Connection` rather than executing the seed batch through a `Cursor`. This was a test-setup API mistake, not a production ledger implementation defect.
+
+### What failed?
+
+The initial full run collected 22 tests. The 19 existing C01 and C02 tests passed, while all three C03 tests stopped during fixture setup. No successful C03 result was claimed from that failed run.
+
+### Why did it fail?
+
+In the fixture setup path, Psycopg 3 provides the required `executemany()` operation through `Cursor`, not through `Connection` as the fixture attempted to use it.
+
+### How was it fixed?
+
+The parameterized fixture seed batch was executed through a cursor. The complete suite was then rerun and all 22 tests passed.
+
+### What other design could have been used?
+
+The persistence layer could have used SQLAlchemy or another persistence abstraction. SQLite or in-memory storage could also have produced a smaller local implementation. They were not selected for C03 because direct Psycopg kept the adapter minimal while preserving real PostgreSQL transaction, rollback, and locking semantics for the conventional baseline.
+
+### What trade-off did we accept?
+
+Direct Psycopg keeps the implementation small and makes PostgreSQL transaction behavior explicit, but it provides less ORM abstraction and portability than a higher-level persistence layer. C03 also intentionally accepts a bounded scope: it proves the successful flow and one rollback point but does not implement the C04 safety, idempotency, replay, conflict, or comprehensive failure matrix.
+
+### What test proves the result?
+
+The PostgreSQL integration tests prove that the successful transfer changes balances from `100000/0` to `90000/10000`, persists exactly one `SUCCESS` Payment and one linked `SUCCESS` Transaction, and returns the committed transaction through history retrieval. The controlled failure test proves that a failure after payer debit rolls balances back to `100000/0` and leaves zero new Payment or Transaction records. Final results were: full suite 22 passed; C01 3 passed; C02 16 passed; C03 3 passed.
+
+### What would we do differently in a production payment system?
+
+A production system would additionally require migration and schema-version management, stronger credential and secret handling, operational monitoring, broader concurrency and load validation, a comprehensive persistence-failure matrix, and production-grade idempotency and reconciliation. Those concerns are outside C03 and are not claimed as implemented.
+
+### What did this Card teach us?
+
+Transaction correctness must be demonstrated against the real database, and atomicity must include balances and persistence in one transaction. Integration setup failures must be corrected before evidence is accepted, and the complete suite must then be rerun so failed setup is not confused with successful implementation behavior. C03 now provides the conventional control baseline for the later ledger comparison.
 
 ## C03 Final Audit and Delivery Record
 
@@ -1979,6 +2021,7 @@ Evidence recorded:
 
 - C01 delivery evidence is recorded in the C01 section above.
 - C02 Phase 1 implementation, initial independent audit failure, remediation, independent re-audit and Exit Gate PASS, implementation delivery (`20098e9c4782d38137fb047711314c2b738de373`), completion evidence/state (`cf4977b9e4364bd5dfef7b788fba7cd363b3affa`), and final delivery/completion record are recorded in the C02 section above.
+- C03 Phase 1 implementation, PostgreSQL integration and controlled rollback evidence, independent spec-based audit and Exit Gate PASS, human delivery approval, implementation delivery (`e626bc10eab7a33c5a03042e41a706d989168548`), completion evidence/state (`6a8d33173187a01a5bda28d39fe35e392c2476c3`), and corrective evidence-label documentation (`19bccd9f1a60930a472c694136f0c7fb74eed3f1`) are recorded in the C03 section above.
 - Benchmark evidence: `NONE YET`.
 
 Planned evidence requirements remain defined in advance. Live execution state is owned by `PROJECT_CONTROL.md`; this Evidence Map intentionally does not duplicate mutable global fields such as Active Card, authorization, blocker, or Next Allowed Card.
