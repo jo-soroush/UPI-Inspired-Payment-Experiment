@@ -475,6 +475,22 @@ One idempotency key identifies one logical request intent. The same key with the
 
 This rule applies at the application/payment level to both ledger implementations.
 
+For this bounded prototype, `idempotency_key` is unique across payment requests. The immutable canonical request payload is exactly:
+
+```text
+payment_id
+payer_id
+merchant_id
+amount
+currency
+```
+
+The idempotency key and mutable or transport-specific fields are excluded from the payload fingerprint. `PaymentService` owns deterministic canonicalization so the rule remains ledger-neutral; each ledger adapter owns its technology-specific atomic coordination. PostgreSQL must enforce concurrency-safe coordination rather than relying on a Python-only pre-check.
+
+The same ledger-neutral canonicalization function is reused during the bounded C03-to-C04 PostgreSQL schema initialization so already-committed C03 payments receive derived fingerprints and idempotency bindings without changing their balances, history, or business data. Inconsistent legacy key bindings fail initialization transactionally rather than being guessed or overwritten.
+
+Reusing a completed `payment_id` with the same canonical payload returns its original logical result without another execution. Reusing it with a different canonical payload is a conflict. The API maps both identifier conflicts to HTTP 409 while keeping HTTP concepts outside the ledger adapter.
+
 # 10. Address and Key Boundary
 
 Each simulated Customer or Merchant may map one-to-one to an Anvil test address. The mapping is application-managed and the backend controls signing. No private keys are exposed to the UI. This is a custodial/testing model, not production wallet architecture or production-safe key management.

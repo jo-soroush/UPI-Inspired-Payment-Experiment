@@ -183,11 +183,12 @@ Example:
 
 ```json
 {
+  "payment_id": "PAY-001",
   "payer_id": "C001",
   "merchant_id": "M001",
-  "amount": 100,
+  "amount": 10000,
   "currency": "SEK",
-  "idempotency_key": "PAY-001"
+  "idempotency_key": "REQ-001"
 }
 ```
 

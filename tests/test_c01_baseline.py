@@ -18,8 +18,14 @@ def test_project_configuration_declares_expected_dependencies() -> None:
         config = tomllib.load(config_file)
 
     assert config["project"]["name"] == "upi-payment-experiment"
-    assert config["project"]["dependencies"] == ["psycopg[binary]>=3,<4"]
-    assert "pytest" in config["project"]["optional-dependencies"]["test"][0]
+    assert config["project"]["dependencies"] == [
+        "fastapi>=0.115,<1",
+        "psycopg[binary]>=3,<4",
+    ]
+    assert config["project"]["optional-dependencies"]["test"] == [
+        "httpx>=0.27,<1",
+        "pytest>=8,<9",
+    ]
 
 
 def test_canonical_documents_remain_at_repository_root() -> None:

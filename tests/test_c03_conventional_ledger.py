@@ -39,7 +39,9 @@ def ledger() -> ConventionalLedger:
 @pytest.fixture(autouse=True)
 def reset_database(ledger: ConventionalLedger) -> None:
     with psycopg.connect(TEST_DSN) as connection:
-        connection.execute("TRUNCATE transactions, payments, accounts")
+        connection.execute(
+            "TRUNCATE idempotency_records, transactions, payments, accounts"
+        )
         with connection.cursor() as cursor:
             cursor.executemany(
                 """

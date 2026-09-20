@@ -1166,7 +1166,7 @@ Completion evidence: this documentation-only record; its SHA is intentionally no
 
 ## Status
 
-`NOT_STARTED`
+`COMPLETE`
 
 ## Goal
 
@@ -1211,7 +1211,9 @@ same idempotency_key + different canonical payload
 → reject with HTTP 409 Conflict
 ```
 
-The rule applies to both ledger implementations. `payment_id` remains the logical/business payment identifier; `idempotency_key` remains the request duplicate-prevention identifier. Canonical payload comparison may use a stable fingerprint/hash.
+The rule applies to both ledger implementations. `payment_id` remains the logical/business payment identifier; `idempotency_key` remains the request duplicate-prevention identifier. Canonical payload comparison uses a deterministic stable fingerprint over exactly `payment_id`, `payer_id`, `merchant_id`, `amount`, and `currency`. The `idempotency_key`, timestamps, status, database identifiers, transaction identifiers, and HTTP metadata are excluded. For this prototype, the idempotency key is globally unique across payment requests and PostgreSQL provides concurrency-safe coordination.
+
+An existing completed `payment_id` with the same canonical payload returns the original logical result without another execution. Reusing that payment ID with a different canonical payload is a conflict. The minimal FastAPI boundary maps both identifier conflicts to HTTP 409 without placing HTTP semantics in the ledger adapter.
 
 ## Why idempotency matters
 
@@ -1230,6 +1232,22 @@ A network timeout must not cause a customer to be charged twice.
 - duplicate-request result
 - rollback behavior
 - transaction state evidence
+- concurrent same-key integration evidence proving one committed execution
+- malformed-request API validation and conflict mapping evidence
+
+## C04 Verification Harness — PLANNED
+
+Canonical sources: the C04 roadmap clauses and Exit Gate, Architecture decisions A01/A02/D04/D05 and sections 5, 9, and 11, plus the explicitly approved C04 design decisions recorded above.
+
+Acceptance Contract: preserve the C03 successful flow; reject invalid payer, invalid merchant, insufficient balance, zero/negative amount, and malformed API requests without balance corruption or successful persistence; return the original result for same-payload replays; reject different-payload identifier reuse; and roll controlled persistence failure back completely.
+
+Critical invariants: rejected requests do not change balances; a replay cannot cause a second debit or credit; conflicts do not execute the ledger; one logical successful payment has one committed Transaction; balances and persisted SUCCESS state agree; rollback leaves no partial Payment, Transaction, balance, or terminal idempotency state; concurrent same-key requests cannot create two executions.
+
+Verification strategy: deterministic unit checks for canonical fingerprints and API mappings, real PostgreSQL integration tests for safety/rollback/replay/concurrency, full regression suite, and later independent spec-based audit. Generated property testing is not planned unless implementation evidence shows a concrete need. Mutation testing remains conditional; after implementation, the compact pure decision logic will be evaluated as a possible targeted pilot.
+
+Requirement/invariant traceability and executed results are recorded below after the planned contract so planned and observed evidence remain distinct.
+
+Initial independent spec-based audit: `FAIL` — one blocker and three minor findings. Bounded remediation evidence is recorded below. The second independent re-audit was executed and returned `FAIL` only because one MINOR documentation inconsistency remained; all technical findings F-01 through F-04 were verified as resolved. Final independent documentation confirmation subsequently passed with no findings. C04 remains `IN_PROGRESS` and is `READY_FOR_HUMAN_APPROVAL`; human approval and delivery have not occurred.
 
 ## Alternatives considered
 
@@ -1243,23 +1261,251 @@ Payment correctness must be enforced at the backend/ledger level, not delegated 
 
 ## Actual implementation
 
-`NOT YET EXECUTED`
+Phase 1 implemented the bounded C04 safety layer while preserving the C03 transaction path:
+
+- `PaymentService` deterministically hashes only the approved immutable payload fields and passes the fingerprint through the ledger-neutral interface;
+- `ConventionalLedger` acquires sorted PostgreSQL transaction-scoped advisory locks for both the idempotency key and payment ID before deciding whether to execute, replay, or conflict;
+- `idempotency_records` gives each request key a PostgreSQL-enforced unique binding to one fingerprint and completed payment;
+- schema initialization transactionally derives fingerprints and idempotency bindings for valid completed C03 rows, is idempotent on rerun, and refuses inconsistent legacy bindings rather than inventing data;
+- the existing payments table records the immutable request fingerprint, while its original opaque idempotency-key field remains available as request evidence;
+- same-key/same-payload and same-payment-ID/same-payload requests return the original committed `LedgerResult` without another balance update or Transaction;
+- different-payload reuse raises stable ledger-neutral conflict errors; the minimal FastAPI `POST /payments` adapter maps those errors to HTTP 409;
+- invalid accounts and insufficient funds roll the transaction back without persisted payment state, while Pydantic/domain validation rejects malformed and non-positive requests before ledger execution;
+- a controlled failure after the Payment insert proves that balances, Payment, Transaction, and idempotency state all roll back and that the same request can then succeed on retry.
+- payer-equals-merchant validation now uses a stable ledger-neutral application error and maps to HTTP 422 before ledger execution.
+
+### Files changed in Phase 1
+
+- `src/upi_payment_experiment/api.py`
+- `src/upi_payment_experiment/errors.py`
+- `src/upi_payment_experiment/ledger.py`
+- `src/upi_payment_experiment/payment_service.py`
+- `src/upi_payment_experiment/conventional_ledger.py`
+- `src/upi_payment_experiment/postgres_schema.sql`
+- `tests/test_c04_payment_safety.py`
+- `tests/test_c03_conventional_ledger.py` (fixture reset includes the new C04 table)
+- `tests/test_c01_baseline.py` (narrow dependency-baseline update)
+- `pyproject.toml`
+- `PROJECT_CONTROL.md`
+- `ARCHITECTURE_AND_DECISIONS.md`
+- `PAYMENT_CARD_EVIDENCE_MAP.md`
 
 ## Problems encountered
 
-`NOT YET EXECUTED`
+The first complete C04 run was functionally successful (`39 passed`) but emitted two deprecation warnings from the synchronous Starlette/FastAPI `TestClient` path. The runtime implementation itself did not fail.
+
+Root cause: the first API tests imported the legacy synchronous `TestClient`, whose current dependency path warns about the httpx transition and a deprecated AnyIO alias.
+
+Fix: the API tests were changed to the existing httpx dependency's native asynchronous `ASGITransport` and `AsyncClient`. The focused C04 suite and then the full suite were rerun without warnings; no runtime behavior or additional dependency changed.
 
 ## Test evidence
 
-`NOT YET EXECUTED`
+Executed against the real local PostgreSQL service:
+
+```text
+full suite: 41 passed
+C01: 3 passed
+C02: 16 passed
+C03: 3 passed
+C04: 19 passed
+```
+
+C04 evidence covers the preserved successful transfer, exact persisted state and history, invalid payer, invalid merchant, insufficient balance, zero/negative amount, malformed API input, self-transfer rejection, same-key replay, idempotency conflict, duplicate-payment replay, payment-ID conflict, already-completed replay, C03-era completed-payment migration, controlled persistence failure plus safe retry, HTTP conflict mapping, deterministic fingerprint behavior, and two requests forced to overlap on the same PostgreSQL coordination lock while producing one committed execution.
+
+## EXECUTED Requirement / Invariant Traceability
+
+| Requirement / invariant | Implementation | Test / evidence | Result |
+|---|---|---|---|
+| Canonical payload contains exactly five approved fields | `canonical_payment_fingerprint()` | independent variation of every included and represented excluded field in `test_canonical_fingerprint_uses_only_approved_immutable_payload` | PASS AFTER REMEDIATION |
+| Successful C03 flow remains consistent | service, adapter, schema | `test_successful_c03_flow_still_commits_one_consistent_payment` plus C03 regression | PASS |
+| Invalid accounts and insufficient balance do not mutate state | transactional validation in `ConventionalLedger` | parametrized rejected-ledger integration test | PASS |
+| Zero, negative, and malformed requests do not execute/persist | FastAPI/Pydantic and domain validation | API validation integration tests | PASS |
+| Same key and payload returns original result with no second debit | idempotency lookup under PostgreSQL lock | same-key replay integration test | PASS |
+| Same key and different payload conflicts without execution | fingerprint comparison and `IdempotencyConflictError` | integration test plus HTTP 409 API test | PASS |
+| Duplicate payment ID with same payload returns original result | payment lookup under PostgreSQL lock | duplicate-payment replay integration test | PASS |
+| Duplicate payment ID with different payload conflicts | fingerprint comparison and `PaymentConflictError` | integration test plus HTTP 409 API test | PASS |
+| Completed payment replays safely, including C03-era state | migration backfill plus committed-result reconstruction | new-path replay and real C03-schema migration/replay integration tests | PASS AFTER REMEDIATION |
+| Persistence failure leaves no partial or terminal state and permits retry | one transaction plus controlled post-Payment-insert failure seam | controlled persistence-failure integration test | PASS |
+| Concurrent same-key requests produce one committed execution | sorted transaction-scoped advisory locks plus persistent PK | deterministic two-thread test observes the second PostgreSQL session waiting on the held lock | PASS AFTER REMEDIATION |
+| One logical success has one Payment and one Transaction agreeing with balances | PostgreSQL transaction and constraints | successful, replay, rollback, and concurrency state assertions | PASS |
+| Self-transfer is a controlled invalid request | shared `InvalidPaymentError` plus FastAPI mapping | API and fresh database-state regression test | PASS AFTER REMEDIATION |
+
+## Initial Independent Audit and Bounded Remediation
+
+The initial independent C04 audit returned `FAIL`.
+
+Findings retained as evidence:
+
+- `F-01 BLOCKER`: valid C03-completed rows had no derived fingerprint or idempotency-table binding after schema upgrade. A same-key/different-payment audit probe executed a second transfer, and a same-payment replay conflicted instead of returning the original result.
+- `F-02 MINOR`: the concurrency test synchronized thread starts but did not deterministically prove overlap inside the transaction.
+- `F-03 MINOR`: the fingerprint test proved exclusions and amount inclusion but did not independently vary every required canonical field.
+- `F-04 MINOR`: payer-equals-merchant raised a bare adapter `ValueError` and surfaced as HTTP 500.
+
+Root causes:
+
+- the incremental `request_fingerprint` column was nullable and no migration derived fingerprints or `idempotency_records` from existing C03 data;
+- the original concurrency barrier ran before connection acquisition rather than after PostgreSQL coordination locks were held;
+- canonical field coverage was asserted too broadly from a partial variation test;
+- self-transfer validation lived only as an adapter check without a shared error mapping.
+
+Bounded remediation:
+
+- schema initialization now joins completed C03 Payment, account, and Transaction data, derives the exact canonical fingerprint with the shared ledger-neutral function, updates missing fingerprints, and inserts the original key binding in the same initialization transaction;
+- rerunning initialization validates existing derived values and performs no duplicate write; inconsistent legacy bindings cause transactional failure rather than guessed state;
+- a real isolated PostgreSQL schema test starts with the delivered C03-style tables and data, runs C04 initialization twice, replays the original result, rejects different-payload key reuse, and verifies unchanged balances plus one Payment and Transaction;
+- the concurrency test pauses the first request after it holds both advisory locks, identifies the second connection by PostgreSQL `application_name`, observes `pg_stat_activity.wait_event_type = 'Lock'`, then releases the first request and verifies one execution;
+- the fingerprint test independently varies payment ID, payer ID, merchant ID, amount, and currency, and separately verifies exclusion of idempotency key, timestamp, status, transaction ID, and HTTP metadata;
+- shared `InvalidPaymentError` validation occurs in `PaymentService`, remains as adapter defense in depth, and maps to HTTP 422 with zero persisted state.
+
+Remediation execution history:
+
+- the first focused run stopped with 19 setup errors because the prior independent audit intentionally left an inconsistent synthetic duplicate-key state; the new migration correctly failed closed, and only the disposable test database state was reset;
+- the next focused run produced `18 passed, 1 failed` because the new legacy fixture tried to combine parameterized inserts with multiple SQL commands; the fixture was corrected to execute DDL and parameterized inserts separately;
+- final focused C04 result: `19 passed`;
+- final full-suite result: `41 passed`.
+
+Bounded remediation self-audit: `PASS FOR F-01 THROUGH F-04 — READY_FOR_INDEPENDENT_RE-AUDIT`. This is not an independent re-audit and does not grant the C04 Exit Gate.
+
+## Property / Invariant Testing Result
+
+Generated property testing is `NOT_APPLICABLE` for C04 Phase 1 because the bounded finite decision matrix is exercised deterministically, including the real database race. No Hypothesis dependency was added. Deterministic invariant tests are executed and PASS.
+
+## Mutation Testing Result
+
+Mutation testing remains conditional and was not run or added as a dependency. A later targeted pilot could provide value for the compact canonical-fingerprint field selection and replay/conflict equality branches, but mutation testing is not required to establish the PostgreSQL transaction and concurrency evidence in this Phase.
+
+## Known limitations
+
+- The API is intentionally limited to `POST /payments`; UI, QR, blockchain, and benchmarks remain later Cards.
+- Rejected attempts are rolled back rather than stored as successful Payment or Transaction records; no production rejection journal is claimed.
+- The schema is a prototype initialization script rather than a production migration/versioning system.
+- Operational authentication, authorization, monitoring, reconciliation, and multi-node deployment behavior are not implemented.
+
+## C04 Phase 1 Learning Record
+
+### What did we build?
+
+We added the minimal payment-safety path around the C03 ledger: deterministic canonical request identity, PostgreSQL-backed replay/conflict coordination, safe duplicate-payment behavior, invalid-request and failure rollback handling, and a small `POST /payments` FastAPI boundary.
+
+### Why did we build it this way?
+
+Canonicalization belongs in the shared service so it can remain stable for a future ledger, while PostgreSQL advisory locks, uniqueness, and atomic persistence remain inside the adapter. This preserves the architecture and makes the concurrency proof use the same database transaction as the payment.
+
+### What did we initially misunderstand?
+
+The initial C04 implementation correctly handled payments created through the new C04 path, but it missed the C03-to-C04 persisted-state migration requirement. Existing completed C03 payments had no derived request fingerprints or idempotency bindings, so legacy replay and legacy-key reuse were unsafe. Separately, the initial API-test implementation used the synchronous Starlette/FastAPI `TestClient` path without accounting for deprecations in the installed current versions.
+
+### What failed?
+
+The first full Phase 1 run passed all 39 tests but emitted two API-test deprecation warnings, so it was not accepted as the final warning-free evidence. More importantly, the first independent C04 audit returned `FAIL`: it demonstrated the F-01 legacy-payment/idempotency defect and identified F-02 through F-04. The green Phase 1 run therefore did not prove complete C04 correctness.
+
+### Why did it fail?
+
+The Phase 1 tests created payments through the new C04 path and did not exercise a genuine delivered C03 database upgraded into C04, so no migration/backfill derived fingerprint and idempotency state for existing C03 completed payments. The concurrency test synchronized too early to prove transaction overlap, the fingerprint evidence overclaimed required-field coverage, and self-transfer validation was not mapped through a stable shared error. Separately, the warnings came from the legacy synchronous test-client compatibility path rather than payment execution or the API contract.
+
+### How was it fixed?
+
+The bounded remediation added transactional C03-to-C04 migration/backfill with deterministic legacy fingerprint derivation and idempotency binding, and made inconsistent legacy state fail closed. It added a genuine C03-schema migration integration test, a deterministic PostgreSQL lock-wait concurrency test, complete included/excluded fingerprint-field tests, and shared `InvalidPaymentError` validation with HTTP 422 self-transfer mapping. The API tests were also moved to httpx `ASGITransport` and `AsyncClient`, already within the approved test dependency. C04 and the full suite were rerun successfully without warnings.
+
+### What other design could have been used?
+
+Alternatives included a Python-only pre-check, only a unique constraint, or an in-memory request cache. Those cannot atomically coordinate concurrent requests with balance and persistence changes. A dedicated reservation workflow with explicit in-progress states was also possible but would add unnecessary prototype complexity.
+
+### What trade-off did we accept?
+
+Transaction-scoped advisory locks plus a minimal idempotency table keep the design compact and concurrency-safe, but they are PostgreSQL-specific mechanics and the initialization SQL is not a production migration system. The ledger-neutral contract retains only the fingerprint and logical results.
+
+### What test proves the result?
+
+The original Phase 1 produced seventeen C04 tests and 39 full-suite passes. After the failed independent audit and bounded remediation, nineteen C04 tests use real PostgreSQL for migration, failure, replay, rollback, and deterministic lock-wait semantics and exercise the ASGI API for validation and conflict mapping. The remediated full regression result is 41 passed, including all 22 pre-C04 tests.
+
+### What would we do differently in a production payment system?
+
+A production system would add schema migrations, authenticated callers, operational observability, durable reconciliation and request-in-progress recovery, broader load/concurrency testing, and a retained audit model for rejected attempts. None is claimed as implemented here.
+
+### What did this Card teach us?
+
+Green tests are insufficient when they do not reproduce the previous persisted system state. Schema evolution must preserve prior committed business semantics, and migration boundaries need explicit integration tests. The independent audit caught a real financial correctness defect that the original test suite missed. Evidence must not claim more than tests prove. Duplicate safety must be decided while holding database-backed coordination, not with a process-local check; request identity and business payment identity require separate conflict rules; and rollback evidence must cover idempotency state together with balances, Payment, and Transaction persistence.
+
+## Second Independent Re-Audit and Documentation Remediation Record
+
+Second independent re-audit: `FAIL` — technical remediation was verified, but one `MINOR` documentation inconsistency remained.
+
+Technical findings `F-01` through `F-04`: `PASS / RESOLVED`.
+
+New finding: `R-01 MINOR` — the C04 Learning Record incorrectly denied the payment-semantic misunderstanding exposed by F-01 and described only the earlier TestClient warning under its failure history.
+
+Required remediation: documentation only. This bounded work item corrects the Learning Record while preserving the initial audit failure, all four findings, remediation execution history, and executed test results. No final independent re-audit PASS, C04 Exit Gate PASS, human approval, or C04 completion is claimed.
+
+## Final Independent Documentation Confirmation
+
+Final independent documentation confirmation: `PASS`.
+
+Results: PAYMENT_CARD_EVIDENCE_MAP, PROJECT_CONTROL, Roadmap C04/G03 consistency, AGENTS workflow consistency, cross-document consistency, and repository scope/Git state all passed. Findings: `NONE`.
+
+Technical findings `F-01` through `F-04`: `RESOLVED`. `R-01`: `RESOLVED`.
+
+C04 Exit-Gate readiness at the time of final confirmation: `READY_FOR_HUMAN_APPROVAL`. Human approval was then still `NOT GRANTED`; C04 was still `IN_PROGRESS` and not `COMPLETE`. No delivery had occurred at that point. C05 remained `NOT_STARTED`.
 
 ## Exit Gate
 
-All required failure scenarios pass without balance corruption, including:
+Original Phase 1 self-assessment: `PASS — READY_FOR_INDEPENDENT_AUDIT`.
+
+Initial independent spec-based audit: `FAIL`.
+
+Bounded remediation self-audit: `PASS FOR F-01 THROUGH F-04 — READY_FOR_INDEPENDENT_RE-AUDIT`.
+
+All required failure scenarios have executed without balance corruption, including:
 
 - same idempotency_key + same canonical payload returns the original result with no second debit
 - same idempotency_key + different canonical payload is rejected with HTTP 409 Conflict
 - `payment_id` remains distinct from `idempotency_key`
+
+Second independent re-audit: `FAIL` — all technical findings were resolved; one `MINOR` documentation inconsistency remained.
+
+Documentation remediation: performed in this bounded work item.
+
+Final independent documentation confirmation: `PASS`; findings: `NONE`.
+
+C04 remained `IN_PROGRESS` at the time of the pre-delivery Exit Gate record. Exit Gate: `PASS`, with human approval still required before delivery. Human approval was then `NOT GRANTED`; no delivery had occurred at that point. C05 remained `NOT_STARTED`.
+
+## C04 Controlled Delivery Record
+
+Human delivery approval for C04: `GRANTED`.
+
+Controlled delivery: `COMPLETE`.
+
+C04 delivery status: `COMPLETE`.
+
+C04 status: `COMPLETE`.
+
+C04 Exit Gate: `PASS`.
+
+Final independent documentation confirmation: `PASS`; findings: `NONE`.
+
+Technical findings `F-01` through `F-04`: `RESOLVED`. `R-01`: `RESOLVED`.
+
+Final validation executed before completion-state closure:
+
+```text
+docker compose ps: PASS — PostgreSQL healthy
+full suite: 41 passed
+C04: 19 passed
+C03 regression: 3 passed
+compileall: PASS
+pip check: PASS — No broken requirements found
+git diff --check: PASS
+```
+
+Delivery branch: `main`.
+
+The immutable delivery SHA is determined by Git after the single delivery commit and is reported in the final delivery output. It is intentionally not duplicated in this pre-commit documentation state, so no self-referential second documentation commit is created.
+
+C05 status: `NOT_STARTED`.
+
+C05 authorization: `NOT_GRANTED`.
+
+No automatic advancement occurred. Active Card is `NONE`; Next Allowed Card is `C05` for sequence eligibility only.
 
 ---
 

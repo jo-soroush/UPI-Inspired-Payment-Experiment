@@ -1,7 +1,8 @@
 """Shared application service for ledger-independent payment execution."""
 
 from .domain import LedgerResult, Payment
-from .ledger import LedgerInterface
+from .errors import InvalidPaymentError
+from .ledger import LedgerInterface, canonical_payment_fingerprint
 
 
 class PaymentService:
@@ -11,6 +12,11 @@ class PaymentService:
         self._ledger = ledger
 
     def execute_payment(self, payment: Payment) -> LedgerResult:
-        """Delegate a validated domain payment to the configured ledger."""
+        """Execute a request using its immutable canonical payment identity."""
 
-        return self._ledger.execute_payment(payment)
+        if payment.payer_id == payment.merchant_id:
+            raise InvalidPaymentError("payer and merchant must be different")
+        return self._ledger.execute_payment(
+            payment,
+            request_fingerprint=canonical_payment_fingerprint(payment),
+        )

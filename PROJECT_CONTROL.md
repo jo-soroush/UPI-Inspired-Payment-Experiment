@@ -13,11 +13,12 @@ It should stay short and current.
 Project: UPI-Inspired Payment Experiment
 Overall Status: IN_PROGRESS
 Active Card: NONE
-Last Completed Card: C03
-Next Allowed Card: C04
-Execution Authorization: NOT_GRANTED
+Last Completed Card: C04
+Next Allowed Card: C05
+Execution Authorization: NONE / NOT_GRANTED
 C02 Authorization: NOT_GRANTED
 C03 Authorization: NOT_GRANTED
+C04 Authorization: NOT_GRANTED
 Current Branch: main
 Current Blocker: NONE
 Baseline Readiness: COMPLETE
@@ -36,7 +37,7 @@ Next Allowed Card indicates sequence eligibility only. Starting that Card still 
 | C01 | Project Baseline & Experimental Design | COMPLETE |
 | C02 | Domain Models | COMPLETE |
 | C03 | Conventional Ledger | COMPLETE |
-| C04 | Payment Safety & Failure Handling | NOT_STARTED |
+| C04 | Payment Safety & Failure Handling | COMPLETE |
 | C05 | QR Payment Initiation | NOT_STARTED |
 | C06 | Minimal Demo UI | NOT_STARTED |
 | C07 | Blockchain Ledger | NOT_STARTED |
@@ -58,7 +59,7 @@ Money Representation: integer öre
 UI: minimal web UI
 QR: real generated QR, simulated scan acceptable
 Benchmark Evidence: JSON + CSV + raw measurements
-Execution Environment: Docker Compose (C03 PostgreSQL service implemented; FastAPI and Anvil remain planned)
+Execution Environment: Docker Compose (PostgreSQL service implemented; C04 FastAPI payment boundary implemented; containerized FastAPI and Anvil remain planned)
 ```
 
 ---
@@ -145,6 +146,8 @@ Record only meaningful baseline changes.
 | 2026-09-18 | C02 completed | Independent re-audit, Exit Gate, delivery, and push passed | Implementation delivery: `20098e9c4782d38137fb047711314c2b738de373`; completion evidence/state: `cf4977b9e4364bd5dfef7b788fba7cd363b3affa` |
 | 2026-09-19 | C03 started | Explicit human authorization for C03 Phase 1 | C03 start-and-implement instruction after read-only preflight PASS |
 | 2026-09-19 | C03 completed | Human-approved delivery after independent audit PASS and Exit Gate PASS | Implementation delivery: `e626bc10eab7a33c5a03042e41a706d989168548`; completion evidence/state: subsequent documentation record |
+| 2026-09-20 | C04 started | Explicit human authorization for C04 Phase 1 after the read-only preflight decisions were resolved | C04 implementation instruction; authorization is limited to C04 |
+| 2026-09-20 | C04 completed | Human delivery approval granted after final validation, final independent documentation confirmation PASS, and Exit Gate PASS; controlled delivery completed on `main` | C04 delivery status: COMPLETE; immutable delivery SHA is determined by Git and reported in the final delivery output; no C05 authorization or advancement |
 
 ---
 

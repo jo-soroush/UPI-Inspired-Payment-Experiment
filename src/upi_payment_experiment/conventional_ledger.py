@@ -10,14 +10,14 @@ import psycopg
 from psycopg.rows import dict_row
 
 from .domain import LedgerResult, Payment, PaymentStatus, Transaction
-
-
-class AccountNotFoundError(LookupError):
-    """A payment account required by the conventional ledger does not exist."""
-
-
-class InsufficientFundsError(ValueError):
-    """The payer cannot fund the requested transfer."""
+from .errors import (
+    AccountNotFoundError,
+    IdempotencyConflictError,
+    InsufficientFundsError,
+    InvalidPaymentError,
+    PaymentConflictError,
+)
+from .ledger import canonical_payment_fingerprint
 
 
 class ConventionalLedger:
@@ -50,13 +50,14 @@ class ConventionalLedger:
         return cls(dsn)
 
     def initialize_schema(self) -> None:
-        """Create the minimal C03 schema when it does not already exist."""
+        """Create the schema and migrate valid completed C03 payments."""
 
         schema = files("upi_payment_experiment").joinpath(
             "postgres_schema.sql"
         ).read_text(encoding="utf-8")
-        with psycopg.connect(self._dsn) as connection:
+        with psycopg.connect(self._dsn, row_factory=dict_row) as connection:
             connection.execute(schema)
+            self._backfill_completed_c03_payments(connection)
 
     def get_balance(self, owner_id: str, currency: str = "SEK") -> int:
         """Return an account balance without exposing PostgreSQL row details."""
@@ -76,17 +77,51 @@ class ConventionalLedger:
             raise AccountNotFoundError(f"account not found for owner {owner_id!r}")
         return row["balance"]
 
-    def execute_payment(self, payment: Payment) -> LedgerResult:
-        """Atomically debit, credit, and persist one successful payment."""
+    def execute_payment(
+        self, payment: Payment, *, request_fingerprint: str
+    ) -> LedgerResult:
+        """Atomically execute a new request or return its committed result."""
 
         if payment.payer_id == payment.merchant_id:
-            raise ValueError("payer and merchant must be different")
+            raise InvalidPaymentError("payer and merchant must be different")
+        if not isinstance(request_fingerprint, str) or not request_fingerprint:
+            raise ValueError("request_fingerprint must be a non-empty string")
 
         connection = psycopg.connect(self._dsn, row_factory=dict_row)
         try:
             connection.execute(
                 "SET TRANSACTION ISOLATION LEVEL READ COMMITTED"
             )
+            self._lock_request_identities(connection, payment)
+            self._after_request_identity_locks()
+
+            idempotent_result = self._result_for_idempotency_key(
+                connection, payment.idempotency_key, request_fingerprint
+            )
+            if idempotent_result is not None:
+                connection.commit()
+                return idempotent_result
+
+            payment_result = self._result_for_payment_id(
+                connection, payment.payment_id, request_fingerprint
+            )
+            if payment_result is not None:
+                connection.execute(
+                    """
+                    INSERT INTO idempotency_records (
+                        idempotency_key, request_fingerprint, payment_id
+                    )
+                    VALUES (%s, %s, %s)
+                    """,
+                    (
+                        payment.idempotency_key,
+                        request_fingerprint,
+                        payment.payment_id,
+                    ),
+                )
+                connection.commit()
+                return payment_result
+
             accounts = connection.execute(
                 """
                 SELECT account_id, owner_id, balance, currency
@@ -131,10 +166,11 @@ class ConventionalLedger:
                     amount,
                     currency,
                     idempotency_key,
+                    request_fingerprint,
                     status,
                     created_at
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 (
                     payment.payment_id,
@@ -143,10 +179,12 @@ class ConventionalLedger:
                     payment.amount,
                     payment.currency,
                     payment.idempotency_key,
+                    request_fingerprint,
                     PaymentStatus.SUCCESS.value,
                     payment.created_at,
                 ),
             )
+            self._after_payment_persisted()
             connection.execute(
                 """
                 INSERT INTO transactions (
@@ -160,6 +198,19 @@ class ConventionalLedger:
                     self.ledger_type,
                     PaymentStatus.SUCCESS.value,
                     transaction_timestamp,
+                ),
+            )
+            connection.execute(
+                """
+                INSERT INTO idempotency_records (
+                    idempotency_key, request_fingerprint, payment_id
+                )
+                VALUES (%s, %s, %s)
+                """,
+                (
+                    payment.idempotency_key,
+                    request_fingerprint,
+                    payment.payment_id,
                 ),
             )
             connection.commit()
@@ -251,6 +302,182 @@ class ConventionalLedger:
 
     def _after_payer_debit(self) -> None:
         """Narrow test seam for the canonical controlled rollback proof."""
+
+    def _after_payment_persisted(self) -> None:
+        """Narrow test seam for C04 persistence-failure rollback proof."""
+
+    def _after_request_identity_locks(self) -> None:
+        """Narrow test seam for deterministic request-lock verification."""
+
+    @staticmethod
+    def _backfill_completed_c03_payments(
+        connection: psycopg.Connection,
+    ) -> None:
+        """Derive C04 request identity for committed C03 payment history."""
+
+        rows = connection.execute(
+            """
+            SELECT
+                p.payment_id,
+                payer.owner_id AS payer_id,
+                merchant.owner_id AS merchant_id,
+                p.amount,
+                p.currency,
+                p.idempotency_key,
+                p.status,
+                p.created_at,
+                p.request_fingerprint,
+                t.transaction_id
+            FROM payments AS p
+            JOIN accounts AS payer
+                ON payer.account_id = p.payer_account_id
+            JOIN accounts AS merchant
+                ON merchant.account_id = p.merchant_account_id
+            JOIN transactions AS t
+                ON t.payment_id = p.payment_id
+            WHERE p.status = %s AND t.status = %s
+            ORDER BY p.payment_id
+            """,
+            (PaymentStatus.SUCCESS.value, PaymentStatus.SUCCESS.value),
+        ).fetchall()
+
+        for row in rows:
+            persisted_payment = Payment(
+                payment_id=row["payment_id"],
+                payer_id=row["payer_id"],
+                merchant_id=row["merchant_id"],
+                amount=row["amount"],
+                currency=row["currency"],
+                idempotency_key=row["idempotency_key"],
+                status=PaymentStatus(row["status"]),
+                created_at=row["created_at"],
+            )
+            fingerprint = canonical_payment_fingerprint(persisted_payment)
+            existing_fingerprint = row["request_fingerprint"]
+            if existing_fingerprint is not None and existing_fingerprint != fingerprint:
+                raise RuntimeError(
+                    "persisted payment fingerprint conflicts with canonical data"
+                )
+
+            connection.execute(
+                """
+                UPDATE payments
+                SET request_fingerprint = %s
+                WHERE payment_id = %s AND request_fingerprint IS NULL
+                """,
+                (fingerprint, row["payment_id"]),
+            )
+            idempotency_row = connection.execute(
+                """
+                SELECT request_fingerprint, payment_id
+                FROM idempotency_records
+                WHERE idempotency_key = %s
+                """,
+                (row["idempotency_key"],),
+            ).fetchone()
+            if idempotency_row is None:
+                connection.execute(
+                    """
+                    INSERT INTO idempotency_records (
+                        idempotency_key, request_fingerprint, payment_id
+                    )
+                    VALUES (%s, %s, %s)
+                    """,
+                    (
+                        row["idempotency_key"],
+                        fingerprint,
+                        row["payment_id"],
+                    ),
+                )
+            elif (
+                idempotency_row["request_fingerprint"] != fingerprint
+                or idempotency_row["payment_id"] != row["payment_id"]
+            ):
+                raise RuntimeError(
+                    "legacy idempotency key has inconsistent payment bindings"
+                )
+
+    @staticmethod
+    def _lock_request_identities(
+        connection: psycopg.Connection,
+        payment: Payment,
+    ) -> None:
+        """Serialize both request identities inside PostgreSQL."""
+
+        lock_names = sorted(
+            (
+                f"idempotency:{payment.idempotency_key}",
+                f"payment:{payment.payment_id}",
+            )
+        )
+        for lock_name in lock_names:
+            connection.execute(
+                "SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))",
+                (lock_name,),
+            )
+
+    @staticmethod
+    def _result_for_idempotency_key(
+        connection: psycopg.Connection,
+        idempotency_key: str,
+        request_fingerprint: str,
+    ) -> LedgerResult | None:
+        row = connection.execute(
+            """
+            SELECT
+                i.request_fingerprint,
+                p.payment_id,
+                t.transaction_id,
+                t.status
+            FROM idempotency_records AS i
+            JOIN payments AS p ON p.payment_id = i.payment_id
+            JOIN transactions AS t ON t.payment_id = p.payment_id
+            WHERE i.idempotency_key = %s
+            """,
+            (idempotency_key,),
+        ).fetchone()
+        if row is None:
+            return None
+        if row["request_fingerprint"] != request_fingerprint:
+            raise IdempotencyConflictError(
+                "idempotency key was reused with a different payment request"
+            )
+        return ConventionalLedger._ledger_result_from_row(row)
+
+    @staticmethod
+    def _result_for_payment_id(
+        connection: psycopg.Connection,
+        payment_id: str,
+        request_fingerprint: str,
+    ) -> LedgerResult | None:
+        row = connection.execute(
+            """
+            SELECT
+                p.request_fingerprint,
+                p.payment_id,
+                t.transaction_id,
+                t.status
+            FROM payments AS p
+            JOIN transactions AS t ON t.payment_id = p.payment_id
+            WHERE p.payment_id = %s
+            """,
+            (payment_id,),
+        ).fetchone()
+        if row is None:
+            return None
+        if row["request_fingerprint"] != request_fingerprint:
+            raise PaymentConflictError(
+                "payment ID was reused with a different payment request"
+            )
+        return ConventionalLedger._ledger_result_from_row(row)
+
+    @staticmethod
+    def _ledger_result_from_row(row: dict[str, object]) -> LedgerResult:
+        return LedgerResult(
+            payment_id=str(row["payment_id"]),
+            transaction_id=str(row["transaction_id"]),
+            status=PaymentStatus(str(row["status"])),
+        )
 
     @staticmethod
     def _transaction_from_row(row: dict[str, object]) -> Transaction:
