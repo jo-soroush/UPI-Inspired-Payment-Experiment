@@ -317,6 +317,8 @@ Measured, estimated, and qualitative cost evidence must never be mixed.
 
 Use fixed fixtures and a predefined payment sequence. Customers are `C001`–`C020`, merchants are `M001`–`M005`, and both ledger implementations receive the identical logical sequence. If pseudo-random generation is introduced later, record a fixed seed.
 
+The ledgers are alternative, independently reset execution contexts. C08 must generate execution identifiers deterministically from ledger type, benchmark run, and payment index; their raw values need not be identical across contexts. This preserves equivalent payer, merchant, amount, currency, workload, ordering, and reset conditions while keeping each context's payment and idempotency namespace separate. It does not authorize implementation of an identifier generator before C08.
+
 Evaluate separately:
 
 ```text
@@ -343,7 +345,7 @@ C08 includes differential testing of normalized logical outcomes. This uses the 
 Canonical sequence:
 
 ```text
-same canonical logical input
+same logical workload with ledger-scoped execution identifiers
 + equivalent initial state
 → run ConventionalLedger
 → reset to equivalent state
@@ -373,7 +375,7 @@ gas
 implementation-specific timing
 ```
 
-Normalization must preserve business meaning without hiding a failure. Any logical-outcome mismatch must be retained as evidence with the canonical input, equivalent starting state, both raw outcomes, normalized outcomes, and comparison result. A mismatch invalidates the affected correctness comparison until explained and resolved or explicitly reported as an unresolved limitation.
+Normalization must preserve business meaning without hiding a failure. Any logical-outcome mismatch must be retained as evidence with the logical workload specification and ledger-scoped execution identifiers, equivalent starting state, both raw outcomes, normalized outcomes, and comparison result. A mismatch invalidates the affected correctness comparison until explained and resolved or explicitly reported as an unresolved limitation.
 
 ---
 

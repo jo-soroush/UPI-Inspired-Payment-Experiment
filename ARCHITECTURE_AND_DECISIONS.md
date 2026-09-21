@@ -574,9 +574,13 @@ idempotency_key → payment request → payment_id → ledger execution → tran
 
 One idempotency key identifies one logical request intent. The same key with the same canonical request payload returns the original result without another debit. The same key with a different canonical payload is rejected with HTTP 409 and internal error `IDEMPOTENCY_KEY_REUSED_WITH_DIFFERENT_REQUEST`. Payload comparison uses a canonical representation or stable fingerprint/hash.
 
-This rule applies at the application/payment level to both ledger implementations.
+The delivered C04 implementation had one execution context, `conventional`. Its historical statement that `idempotency_key` is globally unique means globally unique within that sole ConventionalLedger execution namespace; C04 runtime semantics and storage are unchanged by this decision.
 
-For this bounded prototype, `idempotency_key` is unique across payment requests. The immutable canonical request payload is exactly:
+For planned C07 work, `ConventionalLedger` and `BlockchainLedger` are alternative experimental ledger contexts, not simultaneous financial settlement rails. Their execution namespaces are `ledger_type=conventional` and `ledger_type=blockchain`. Within either namespace, the C04 rules remain unchanged: the same idempotency key and canonical request returns or reconciles the original result without a second transfer; the same key with a different fingerprint raises `IdempotencyConflictError`; conflicting reuse of a payment ID raises `PaymentConflictError`; and a processed payment ID cannot execute a second transfer.
+
+`payment_id` and `idempotency_key` are unique only as the pairs `(ledger_type, payment_id)` and `(ledger_type, idempotency_key)`. The same raw identifier may therefore exist once in each distinct namespace as two separate experimental executions. One namespace's journal or state must not mutate, satisfy, or reconcile the other namespace's identifiers. This is valid only because the contexts are alternative and independently reset for the experiment; it is not a production multi-rail settlement design. A future real multi-rail system would need a global coordinator, which is out of scope.
+
+The immutable canonical request payload is exactly:
 
 ```text
 payment_id
@@ -586,15 +590,17 @@ amount
 currency
 ```
 
-The idempotency key and mutable or transport-specific fields are excluded from the payload fingerprint. `PaymentService` owns deterministic canonicalization so the rule remains ledger-neutral; each ledger adapter owns its technology-specific atomic coordination. PostgreSQL must enforce concurrency-safe coordination rather than relying on a Python-only pre-check.
+The idempotency key, ledger selector, and mutable or transport-specific fields are excluded from the payload fingerprint. Ledger selection remains outside `Payment`, `PaymentRequest` canonical payload, the fingerprint, and `LedgerInterface`. `PaymentService` owns deterministic canonicalization so the rule remains ledger-neutral; each ledger adapter owns its technology-specific atomic coordination. PostgreSQL must enforce concurrency-safe coordination rather than relying on a Python-only pre-check.
 
 The same ledger-neutral canonicalization function is reused during the bounded C03-to-C04 PostgreSQL schema initialization so already-committed C03 payments receive derived fingerprints and idempotency bindings without changing their balances, history, or business data. Inconsistent legacy key bindings fail initialization transactionally rather than being guessed or overwritten.
 
 Reusing a completed `payment_id` with the same canonical payload returns its original logical result without another execution. Reusing it with a different canonical payload is a conflict. The API maps both identifier conflicts to HTTP 409 while keeping HTTP concepts outside the ledger adapter.
 
+For C07, application-level request coordination is durably recorded in a small PostgreSQL blockchain operation journal scoped to the `blockchain` execution namespace. It records the idempotency key, canonical request fingerprint, payment ID, transaction hash, sender identity/address, nonce where required, lifecycle/status, and enough signed-transaction linkage to recover safely. This journal is not a second financial ledger and is never authoritative for blockchain balances; `PaymentLedger` remains authoritative for simulated balances and processed payment IDs. PostgreSQL and Ethereum/Anvil do not share one ACID transaction, so the design uses durable operation state, deterministic transaction identity, reconciliation, and exact-transaction recovery rather than claiming cross-system atomicity.
+
 # 10. Address and Key Boundary
 
-Each simulated Customer or Merchant may map one-to-one to an Anvil test address. The mapping is application-managed and the backend controls signing. No private keys are exposed to the UI. This is a custodial/testing model, not production wallet architecture or production-safe key management.
+Each simulated Customer or Merchant maps deterministically one-to-one to a controlled Anvil test address. The mapping is application-managed and the backend controls signing. For a customer payment, `BlockchainLedger` signs locally with the deterministic Anvil test private key associated with the payer; the contract verifies that `msg.sender` is authorized for the debited payer identity. No private keys are exposed to the UI or placed in Payment/domain objects. This is a custodial/testing model, not production wallet architecture or production-safe key management.
 
 # 11. Atomicity and Failure Strategy
 
@@ -612,11 +618,13 @@ COMMIT
 
 Failure causes `ROLLBACK`. Controlled failure injection will verify rollback after a simulated debit and before completion; infrastructure will not be intentionally corrupted.
 
-The Solidity ledger will use controlled reverts for invalid conditions and processed `payment_id` values to reject replay. A lost response is reconciled by receipt/status lookup; it is not treated as failure and must not trigger a blind second submission.
+The Solidity ledger will use controlled reverts for invalid conditions and processed `payment_id` values to reject replay. Anvil/EVM transaction atomicity is limited to contract state: a revert must leave balances and processed-payment state unchanged. A lost response is reconciled by receipt/status lookup; it is not treated as failure and must not trigger a blind second submission.
 
 # 12. Ambiguous Blockchain Status
 
-If a transaction may have executed but the application times out, retain the transaction hash when available and mark the payment `PENDING` or `UNKNOWN`. Receipt reconciliation resolves it to `SUCCESS`, `FAILED`, or an unresolved state that remains `PENDING`/`UNKNOWN`. Application idempotency and contract-level processed-payment tracking provide separate replay protection.
+For C07, the backend constructs and signs the exact transaction before broadcast, derives its transaction hash, and durably records a prepared operation before treating submission as complete. The journal lifecycle is semantically `PREPARED`, `SUBMITTED`, `SUCCESS`, `FAILED`, or `UNKNOWN`.
+
+If submission or receipt status is ambiguous, retain the transaction hash and mark the ledger-neutral payment `PENDING` or `UNKNOWN`. Reconciliation first inspects the journal, transaction hash, Ethereum transaction/receipt state, and contract processed-payment state. It resolves to `SUCCESS`, `FAILED`, or an unresolved state that remains `PENDING`/`UNKNOWN`; it never builds a new transaction for the unresolved logical payment. If recovery needs rebroadcast, it may broadcast only the exact persisted signed raw transaction with the same transaction hash. Application idempotency and contract-level processed-payment tracking provide separate replay protection.
 
 # 13. Reproducible Local Environment
 
@@ -638,3 +646,32 @@ Docker Compose
 ├── PostgreSQL
 └── Anvil
 ```
+
+# 14. C07 Architecture Decision Lock
+
+## Ledger Selection
+
+Ledger choice is a FastAPI transport/composition concern, above `PaymentService`:
+
+```text
+FastAPI
+→ ledger/service registry
+→ selected PaymentService
+→ selected LedgerInterface implementation
+```
+
+The registry contains at least `conventional → PaymentService(ConventionalLedger)` and `blockchain → PaymentService(BlockchainLedger)`. C07 selection uses `ledger=conventional|blockchain` at the FastAPI transport boundary. Omitted selection remains backward-compatible conventional behavior. The selector may apply to payment and ledger-dependent demo reads; merchant QR identity remains ledger-independent. `Payment`, `PaymentRequest` canonical payload, request fingerprint, and `LedgerInterface` method signatures remain ledger-neutral and unchanged unless later implementation evidence proves an unavoidable narrow change.
+
+## PaymentLedger and Administrative Authority
+
+`PaymentLedger` is the minimal on-chain authority for known-participant registration, deterministic application-identity-to-authorized-address mapping, integer-öre simulated balances, balance reads, payment execution, processed-payment-ID reads/protection, and payment-event evidence. It may retain a payment fingerprint/hash for replay/conflict inspection; request-level idempotency keys remain off-chain in the operation journal.
+
+The contract defensively rejects unknown payer or merchant, zero amount, insufficient funds, unauthorized payer signer, and processed payment-ID replay. Negative amounts remain impossible at the Solidity `uint` boundary and remain rejected by the existing application/domain boundary. A failed/reverted payment must not partially change balances or mark the payment successful.
+
+Administrative fixture setup uses one owner. OpenZeppelin `Ownable` is the preferred minimal baseline for account registration, initial balance seeding, and other strictly administrative fixture operations. Runtime payment execution uses the payer's signer and does not require an administrator to move funds. Fresh deterministic Anvil state or redeployment is preferred for reset; unrestricted runtime reseeding is not allowed. `AccessControl`, `AccessManager`, multisig, DAO governance, production-wallet infrastructure, and other complex authorization systems are out of scope.
+
+## Completion and Evidence Boundary
+
+Blockchain payment success means a successful Ethereum transaction receipt with successful receipt status. The transaction hash is the canonical blockchain transaction identifier exposed through ledger-neutral result and history representations. Raw Web3 objects remain inside `BlockchainLedger`.
+
+C07 may retain factual execution metadata—transaction hash, receipt status, gas used, submission timestamp, and confirmation timestamp—for C08. C07 does not aggregate those facts, run workloads, or draw benchmark conclusions.

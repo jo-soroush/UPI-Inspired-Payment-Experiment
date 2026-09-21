@@ -1211,7 +1211,7 @@ same idempotency_key + different canonical payload
 → reject with HTTP 409 Conflict
 ```
 
-The rule applies to both ledger implementations. `payment_id` remains the logical/business payment identifier; `idempotency_key` remains the request duplicate-prevention identifier. Canonical payload comparison uses a deterministic stable fingerprint over exactly `payment_id`, `payer_id`, `merchant_id`, `amount`, and `currency`. The `idempotency_key`, timestamps, status, database identifiers, transaction identifiers, and HTTP metadata are excluded. For this prototype, the idempotency key is globally unique across payment requests and PostgreSQL provides concurrency-safe coordination.
+The rule applies to both ledger implementations within their execution context. `payment_id` remains the logical/business payment identifier; `idempotency_key` remains the request duplicate-prevention identifier. Canonical payload comparison uses a deterministic stable fingerprint over exactly `payment_id`, `payer_id`, `merchant_id`, `amount`, and `currency`. The `idempotency_key`, timestamps, status, database identifiers, transaction identifiers, and HTTP metadata are excluded. For delivered C04, ConventionalLedger was the only execution namespace, so “globally unique” meant globally unique within that conventional context and PostgreSQL provides its concurrency-safe coordination. The planned C07 ledger-scoped namespace decision does not alter C04 runtime behavior.
 
 An existing completed `payment_id` with the same canonical payload returns the original logical result without another execution. Reusing that payment ID with a different canonical payload is a conflict. The minimal FastAPI boundary maps both identifier conflicts to HTTP 409 without placing HTTP semantics in the ledger adapter.
 
@@ -1905,11 +1905,11 @@ Original Phase 1 Exit Gate self-assessment: `PASS — SUBJECT TO INDEPENDENT AUD
 
 ## Status
 
-`IN_PROGRESS — AUTHORIZED VERIFICATION OF PRE-EXISTING CANDIDATE IMPLEMENTATION`
+`COMPLETE`
 
 ## Authorization and provenance
 
-The committed baseline at `267ef0644b692e3322cacf93cb282d9b409b1e46` recorded C06 as `NOT_STARTED` and `NOT_GRANTED`. A substantial uncommitted C06 candidate implementation existed before the current explicit human authorization. That authorization adopts the candidate for formal inspection and verification only; it does not retroactively authorize the earlier work, grant delivery approval, or mark C06 complete.
+The committed baseline at `267ef0644b692e3322cacf93cb282d9b409b1e46` recorded C06 as `NOT_STARTED` and `NOT_GRANTED`. A substantial uncommitted C06 candidate implementation existed before later explicit human authorization. The authorization adopted that candidate for formal inspection and verification only; it did not retroactively authorize the earlier work. The subsequent independent audits, remediation, human delivery approval, and controlled delivery closure below established C06 completion.
 
 ## Goal
 
@@ -2195,6 +2195,10 @@ READY_FOR_HUMAN_DELIVERY_APPROVAL: `YES`.
 
 `NOT_STARTED`
 
+Authorization: `NOT_GRANTED`.
+
+Sequence eligibility: `YES` — C07 is the next allowed Card, but implementation remains prohibited until explicit human authorization is granted.
+
 ## Goal
 
 Implement the same logical payment flow using a local Ethereum-compatible ledger.
@@ -2294,6 +2298,91 @@ For the interview prototype:
 - no real-fund custody
 - no production custody claim
 - key-management limitations documented explicitly
+
+## Preflight Remediation and Architecture Decision Lock — 2026-09-21
+
+The prior read-only C07 preflight was `BLOCKED`. This documentation-only remediation locks the previously unresolved architecture decisions; it does not authorize implementation, create a contract, install tooling, or change C07 status.
+
+### Shared selection boundary
+
+Ledger selection belongs at the FastAPI transport/composition boundary, above `PaymentService`:
+
+```text
+FastAPI → ledger/service registry → selected PaymentService → selected LedgerInterface
+```
+
+The planned registry contains `conventional` and `blockchain` services. C07 selection is `ledger=conventional|blockchain`; omitted selection preserves existing conventional behavior. The selector may apply to payment and ledger-dependent demo reads, while merchant QR identity remains ledger-independent. `Payment`, the canonical payment payload/fingerprint, and the five-method `LedgerInterface` remain unchanged and ledger-neutral.
+
+### Two-layer idempotency and operation recovery
+
+`PaymentLedger` is authoritative for simulated balances, known participants, payment execution, transfer atomicity, processed `payment_id` protection, and payment events. A small durable PostgreSQL blockchain operation journal is authoritative for request/execution coordination: idempotency key, request fingerprint, payment ID, transaction hash, sender identity/address, nonce where required, lifecycle/status, and sufficient signed-transaction linkage for safe recovery.
+
+The journal is not a second financial ledger and is never authoritative for blockchain balances. It enforces the existing C04 outcomes: same key and canonical request returns or reconciles the original logical payment; same key with a different fingerprint raises `IdempotencyConflictError`; conflicting reuse of a payment ID raises `PaymentConflictError`; no second logical transfer is allowed.
+
+PostgreSQL and Ethereum/Anvil cannot participate in one shared ACID transaction. C07 therefore uses durable operation state, deterministic transaction identity, reconciliation, and exact-transaction recovery rather than claiming cross-system atomicity.
+
+### State machine and lost-response handling
+
+The backend constructs and signs the exact payer transaction locally before broadcast, derives its transaction hash, and records a prepared operation durably. The required semantic lifecycle is `PREPARED`, `SUBMITTED`, `SUCCESS`, `FAILED`, and `UNKNOWN`.
+
+Successful receipt resolves to `SUCCESS`; a receipt showing EVM failure/revert resolves to `FAILED`. Ambiguous submission or receipt state resolves to ledger-neutral `PENDING` or `UNKNOWN` while retaining the transaction hash. Retry first inspects the journal, transaction hash, Ethereum transaction/receipt state, and contract processed-payment state. It must never build a new transaction for an unresolved logical payment; controlled recovery may rebroadcast only the exact persisted signed raw transaction with the same hash.
+
+### Signing, account authority, and fixture administration
+
+Application identities map deterministically one-to-one to controlled Anvil test accounts. The backend signs a customer payment with the payer's deterministic Anvil test key. The contract must require `msg.sender` authorization for the payer identity whose balance is debited; arbitrary addresses cannot debit another participant. Keys are backend-only, test-only, excluded from Payment/domain/UI/Git, and are not production key management.
+
+One owner performs account registration, initial balance seeding, and other strictly administrative fixture operations. OpenZeppelin `Ownable` is the preferred minimal baseline. Runtime payments do not require the owner to move customer funds; fresh deterministic Anvil state or redeployment is preferred for reset. Complex access-control, multisig, DAO, wallet, token, DeFi, public-chain, bridge, staking, and governance features remain excluded.
+
+### Planned acceptance, invariants, and evidence
+
+The minimal contract must provide known-account registration, deterministic identity/address authorization, integer-öre balances, balance reads, payment execution, processed-payment reads/protection, and payment events. It rejects unknown payer/merchant, zero payment, insufficient funds, unauthorized payer signer, and processed payment replay. Negative values remain rejected by the existing application/domain boundary and are impossible at the Solidity `uint` boundary. Reverts must leave balances and processed state unchanged.
+
+Critical C07 invariants to verify during authorized work are: value conservation during normal payment execution; no balance change on revert; no second transfer for processed payment ID; no unauthorized debit; exact payer/merchant balance deltas on success; and reconciliation that never creates a second logical transfer. Required evidence includes Foundry/Forge Solidity unit tests, fuzz/property or invariant tests where justified, deterministic Anvil tests, and Python/web3.py adapter integration tests. No such tests have been implemented or executed by this remediation.
+
+The blockchain transaction hash is the canonical blockchain transaction identifier in ledger-neutral result/history representations. Raw Web3 objects remain inside `BlockchainLedger`. Raw factual execution data—hash, receipt status, gas used, submission timestamp, and confirmation timestamp—may be retained for later C08 measurement only; C07 does not benchmark, aggregate, or compare it.
+
+### C07-DL01 — Cross-Ledger Identity / Idempotency Scope
+
+Status: `RESOLVED`.
+
+`ConventionalLedger` and `BlockchainLedger` are alternative, independently reset experimental contexts, not two simultaneous settlement rails. Planned C07 identity and idempotency namespaces are `(ledger_type, payment_id)` and `(ledger_type, idempotency_key)`, where `ledger_type` is `conventional` or `blockchain`. Selection remains outside `Payment`, the canonical request payload, the fingerprint, and `LedgerInterface`; the delivered C04 conventional implementation remains unchanged. The previous independent re-preflight `BLOCKED` result is historical. The final independent C07 re-preflight confirmed this decision as resolved. C07 remains `NOT_STARTED` and `NOT_GRANTED`; this decision lock does not authorize implementation.
+
+Within one namespace, same key and canonical request returns or reconciles the original result without a second transfer; same key with a different fingerprint raises `IdempotencyConflictError`; conflicting reuse of `payment_id` raises `PaymentConflictError`; and processed-payment replay cannot transfer twice. Across namespaces, the same raw payment ID or idempotency key is allowed once per context as separate experimental executions. No cross-namespace journal/state may mutate, satisfy, or reconcile the other. This is not a production multi-rail model; a global coordinator would be required for that out-of-scope future case.
+
+For planned C08 work, payer, merchant, amount, currency, workload, ordering, and reset conditions remain equivalent. Execution identifiers are deterministically scoped by ledger type, benchmark run, and payment index; raw identifiers need not match between contexts.
+
+| ID | Planned requirement / expected result | Planned verification result |
+| --- | --- | --- |
+| R1 | Same blockchain idempotency key and canonical request returns or reconciles the original result; no second submission. | `NOT YET EXECUTED` |
+| R2 | Same blockchain idempotency key with a different fingerprint raises `IdempotencyConflictError`. | `NOT YET EXECUTED` |
+| R3 | Conflicting blockchain `payment_id` reuse raises `PaymentConflictError`. | `NOT YET EXECUTED` |
+| R4 | A processed blockchain payment ID replay causes no second transfer. | `NOT YET EXECUTED` |
+| R5 | The same raw payment ID in distinct ledger namespaces is allowed as separate experimental executions. | `NOT YET EXECUTED` |
+| R6 | The same raw idempotency key in distinct ledger namespaces is allowed as separate experimental executions. | `NOT YET EXECUTED` |
+| R7 | C08 uses the same logical workload with deterministic ledger/run-scoped identifiers. | `NOT YET EXECUTED` |
+| R8 | An ambiguous blockchain response reconciles the original operation and does not create a new blockchain transaction. | `NOT YET EXECUTED` |
+| R9 | Conventional behavior remains the delivered C04 behavior. | `NOT YET EXECUTED` |
+| R10 | One ledger namespace's journal or state cannot mutate or satisfy the other namespace. | `NOT YET EXECUTED` |
+
+## Final Independent C07 Re-Preflight and Decision-Lock Delivery Record
+
+Final independent C07 re-preflight: `PASS`.
+
+- C07-DL01: `RESOLVED`
+- C07-RP01: `RESOLVED`
+- Previous decision-lock blockers A–M: `RESOLVED`
+- New findings: `NONE`
+- Open blocking decisions: `NONE`
+- LedgerInterface change required: `NO`
+- Payment domain change required: `NO`
+- C08 boundary: `PASS`
+- Canonical consistency: `PASS`
+- R1–R10 traceability: planned; all results remain `NOT YET EXECUTED`
+- Ready for decision-lock delivery: `YES`
+- Human approval for decision-lock documentation delivery: `GRANTED`
+- C07 Decision-Lock Documentation Delivery: `COMPLETE`
+
+C07 remains `NOT_STARTED`; C07 authorization remains `NOT_GRANTED`; implementation remains `NOT STARTED`. No C07 implementation tests are claimed. Historical blocked preflight and remediation records are preserved above. This documentation delivery does not authorize C07 implementation.
 
 ## Actual implementation
 
