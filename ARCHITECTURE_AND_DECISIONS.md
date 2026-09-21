@@ -279,9 +279,21 @@ Keeps the integration in Python and allows the same FastAPI application to call 
 
 ## D10 — Minimal UI
 
-**Decision:** Use a thin web UI.
+**Decision:** Use a minimal TypeScript web UI as the C06 presentation and payment-initiation layer.
 
 **Status:** ADOPT
+
+The TypeScript UI calls the existing FastAPI boundary:
+
+```text
+TypeScript UI
+→ FastAPI
+→ PaymentService
+→ LedgerInterface
+→ ConventionalLedger or BlockchainLedger
+```
+
+The UI remains outside the core research question and must not duplicate payment correctness, balance rules, merchant validation, idempotency, payment fingerprinting, persistence, ledger execution, rollback, or blockchain semantics. Those remain backend responsibilities.
 
 Required functions only:
 
@@ -297,7 +309,9 @@ show latency
 show transaction history
 ```
 
-**Why not React by default:**
+**Framework boundary:**
+React is not required by default. C06 should choose the smallest frontend structure that satisfies the demo; any framework selection must be justified during C06 preflight or implementation.
+
 The frontend is not the research question.
 
 ---

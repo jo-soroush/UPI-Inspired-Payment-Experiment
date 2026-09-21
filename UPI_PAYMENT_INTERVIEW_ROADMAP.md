@@ -241,13 +241,9 @@ The UI exists to make the demo understandable.
 
 It must not become a separate frontend project.
 
-Preferred options:
+The approved C06 frontend language is TypeScript. Use the smallest minimal web UI structure that satisfies the demo. React or another framework is not required by default and must not be introduced without a C06 justification.
 
-- Simple HTML/CSS/JavaScript
-- Small server-rendered UI
-- Minimal lightweight frontend
-
-Avoid React or another larger frontend stack unless a clear need appears.
+The TypeScript UI calls the existing FastAPI backend and remains a presentation/initiation layer. It must not own payment correctness, balance rules, merchant validation, idempotency, payment fingerprinting, persistence, ledger execution, rollback, or blockchain semantics.
 
 ---
 
@@ -684,6 +680,8 @@ Transaction History:
 - no full mobile application
 - no design system work
 - functional clarity over visual polish
+
+The C06 frontend is a minimal TypeScript web UI. Framework selection, if any, is deferred to C06 preflight/implementation and must remain bounded to the demo.
 
 ### Exit Gate
 
@@ -1635,7 +1633,7 @@ Pydantic
 PostgreSQL
 SQLAlchemy or equivalent small persistence layer
 pytest
-HTML/CSS/JavaScript or minimal server-rendered UI
+Minimal TypeScript web UI
 QR generation/decoding library: zxing-cpp for C05
 Anvil
 Solidity

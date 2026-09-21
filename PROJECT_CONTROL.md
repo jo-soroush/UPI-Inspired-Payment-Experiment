@@ -68,7 +68,7 @@ Blockchain Environment: Anvil
 Smart Contract: Minimal Solidity PaymentLedger
 Blockchain Integration: web3.py
 Money Representation: integer öre
-UI: minimal web UI
+UI: minimal TypeScript web UI
 QR: real generated QR, simulated scan acceptable
 Benchmark Evidence: JSON + CSV + raw measurements
 Execution Environment: Docker Compose (PostgreSQL service implemented; C04 FastAPI payment boundary implemented; containerized FastAPI and Anvil remain planned)

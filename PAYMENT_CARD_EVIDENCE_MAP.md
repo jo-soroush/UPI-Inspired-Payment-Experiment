@@ -1947,13 +1947,13 @@ Time spent on frontend complexity reduces time available for:
 
 ## Planned technology
 
-Simple HTML/CSS/JavaScript or small server-rendered UI.
+Minimal TypeScript web UI calling the existing FastAPI boundary. TypeScript is required for C06; React is optional and not selected by default. The smallest frontend structure that satisfies the demo should be used.
+
+The UI remains a presentation/initiation layer and must not own payment correctness, balance rules, merchant validation, idempotency, payment fingerprinting, persistence, ledger execution, rollback, or blockchain semantics.
 
 ## Why React is not the default
 
-React is not technically wrong.
-
-It is simply unnecessary unless implementation evidence shows that the simple UI cannot support the demo requirements.
+React is not required. It may be considered only if C06 implementation evidence shows that a smaller TypeScript structure cannot support the bounded demo requirements.
 
 ## Actual implementation
 
@@ -2462,7 +2462,7 @@ The following decisions currently form the planned baseline.
 | QR | Real generated QR | ADOPT | Directly relevant to project brief |
 | Interview scan behavior | Simulated/internal QR decoding | ADOPT | Real QR generation with no camera dependency |
 | Real mobile camera integration | Deferred | WATCH | Device integration is outside the current interview scope |
-| UI | Minimal web UI | ADOPT | Demo clarity without frontend scope |
+| UI | Minimal TypeScript web UI | ADOPT | Demo clarity without frontend scope |
 | Public blockchain | Not in interview version | AVOID | Unnecessary variability and scope |
 | Real NFC | Deferred | WATCH | Relevant but not required initially |
 | Real bank integration | Excluded | AVOID | Outside experiment scope |

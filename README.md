@@ -41,7 +41,7 @@ Solidity
 web3.py
 pytest
 Docker Compose
-Minimal web UI
+Minimal TypeScript web UI
 ```
 
 ## Project Documents
