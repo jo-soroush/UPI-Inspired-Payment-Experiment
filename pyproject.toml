@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "upi-payment-experiment"
 version = "0.1.0"
 description = "Minimal baseline for the UPI-inspired payment experiment"
-dependencies = ["fastapi>=0.115,<1", "psycopg[binary]>=3,<4"]
+dependencies = ["fastapi>=0.115,<1", "psycopg[binary]>=3,<4", "zxing-cpp>=3,<4"]
 
 [project.optional-dependencies]
 test = ["httpx>=0.27,<1", "pytest>=8,<9"]

@@ -21,6 +21,7 @@ def test_project_configuration_declares_expected_dependencies() -> None:
     assert config["project"]["dependencies"] == [
         "fastapi>=0.115,<1",
         "psycopg[binary]>=3,<4",
+        "zxing-cpp>=3,<4",
     ]
     assert config["project"]["optional-dependencies"]["test"] == [
         "httpx>=0.27,<1",

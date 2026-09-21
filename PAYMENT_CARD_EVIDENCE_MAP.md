@@ -1247,7 +1247,7 @@ Verification strategy: deterministic unit checks for canonical fingerprints and 
 
 Requirement/invariant traceability and executed results are recorded below after the planned contract so planned and observed evidence remain distinct.
 
-Initial independent spec-based audit: `FAIL` — one blocker and three minor findings. Bounded remediation evidence is recorded below. The second independent re-audit was executed and returned `FAIL` only because one MINOR documentation inconsistency remained; all technical findings F-01 through F-04 were verified as resolved. Final independent documentation confirmation subsequently passed with no findings. C04 remains `IN_PROGRESS` and is `READY_FOR_HUMAN_APPROVAL`; human approval and delivery have not occurred.
+Initial independent spec-based audit: `FAIL` — one blocker and three minor findings. Bounded remediation evidence is recorded below. The second independent re-audit was executed and returned `FAIL` only because one MINOR documentation inconsistency remained; all technical findings F-01 through F-04 were verified as resolved. Final independent documentation confirmation subsequently passed with no findings. At the time of the final independent documentation confirmation, C04 remained `IN_PROGRESS` and was `READY_FOR_HUMAN_APPROVAL`; human approval and delivery had not yet occurred.
 
 ## Alternatives considered
 
@@ -1513,7 +1513,7 @@ No automatic advancement occurred. Active Card is `NONE`; Next Allowed Card is `
 
 ## Status
 
-`NOT_STARTED`
+`COMPLETE — PHASE 1 IMPLEMENTED; C05-A01/A02/A03 RESOLVED; FINAL INDEPENDENT RE-AUDIT PASS; CONTROLLED DELIVERY COMPLETE`
 
 ## Goal
 
@@ -1527,15 +1527,36 @@ This Card demonstrates how payment initiation is separated from payment settleme
 
 ## Planned QR payload
 
+The only canonical C05 merchant QR payload is:
+
+```text
+upi-demo://pay?merchant_id=<single-non-empty-merchant-id>
+```
+
 Example:
 
 ```text
 upi-demo://pay?merchant_id=M001
 ```
 
+The parser contract is strict:
+
+- scheme is exactly `upi-demo`
+- authority/host is exactly `pay`
+- path is empty
+- query contains exactly one `merchant_id`
+- `merchant_id` is non-empty after normal URI parsing
+- duplicate `merchant_id` parameters are rejected
+- additional query parameters are rejected
+- fragments are rejected
+- malformed payloads, wrong schemes, wrong authorities/hosts, and missing merchant IDs are rejected
+- C05 adds no merchant-ID regex beyond existing project/domain validation
+
 ## Why the payload stays small
 
 The QR should identify the payment target.
+
+The QR contains merchant identity only. Amount, `payer_id`, `payment_id`, `idempotency_key`, status, `transaction_id`, ledger choice, and persistence information are not encoded. Amount remains a separate payment input after decoding.
 
 The ledger remains responsible for:
 
@@ -1551,6 +1572,28 @@ A QR is actually generated.
 Camera integration is optional.
 
 For the first interview version, scanning may be simulated by reading/decoding the QR inside the demo application.
+
+The planned minimal C05 dependency for real QR generation and internal/test decoding is `zxing-cpp`. At contract-lock time it was not yet installed or added to project configuration; the subsequent authorized Phase 1 installation is recorded below.
+
+## Integration boundary and unknown merchants
+
+QR logic ends after safely parsing and returning `merchant_id`. It does not implement a merchant database or business lookup. The decoded value is passed into the existing path:
+
+```text
+QR decode
+→ merchant_id
+→ existing FastAPI/application payment boundary
+→ PaymentRequest.merchant_id
+→ PaymentService
+→ LedgerInterface
+→ ConventionalLedger
+```
+
+An unknown merchant cannot successfully initiate payment because the existing C04 account-validation behavior rejects it. C05 does not duplicate `ACCOUNT_NOT_FOUND` or any payment-validation logic.
+
+## C04 reuse
+
+C05 reuses the delivered C04 safety path. It does not reimplement `payment_id` semantics, `idempotency_key` semantics, canonical payment fingerprinting, replay handling, duplicate-payment handling, conflict handling, balance validation, persistence safety, transaction execution, rollback behavior, or C04 error semantics.
 
 ## Why camera scanning is not mandatory
 
@@ -1573,15 +1616,279 @@ Real camera integration adds frontend/device complexity but contributes little t
 
 ## Actual implementation
 
-`NOT YET EXECUTED`
+C05 Phase 1 added `src/upi_payment_experiment/qr.py`, an isolated QR/application adapter with:
+
+- canonical merchant URI construction using only `merchant_id`;
+- strict parsing for the approved scheme, authority, empty path, one non-empty merchant parameter, no additional parameters, and no fragment;
+- raw ASCII-control-character rejection before URI parsing can normalize malformed text;
+- strict UTF-8 percent decoding plus decoded ASCII-control-character rejection for query keys and values;
+- raw fragment-delimiter rejection, including an empty fragment delimiter;
+- controlled QR-specific exceptions that prevent raw library failures from becoming payment-domain behavior;
+- real QR creation through `zxingcpp.create_barcode()` and `Barcode.to_image()`;
+- real internal decoding through `zxingcpp.read_barcode()` followed by strict payload parsing;
+- no account lookup, payment execution, ledger access, persistence, idempotency, or C04 safety implementation.
+
+No new API endpoint was added. C05 integration supplies the decoded `merchant_id` to the delivered `POST /payments` request, which continues through `PaymentService`, `LedgerInterface`, and `ConventionalLedger`.
+
+The approved runtime dependency is declared as `zxing-cpp>=3,<4`; the actually installed and executed version is `3.1.1`.
+
+### Files changed in C05 Phase 1
+
+- `src/upi_payment_experiment/qr.py`
+- `tests/test_c05_qr_payment_initiation.py`
+- `pyproject.toml`
+- `tests/test_c01_baseline.py` (narrow dependency-baseline update)
+- `PROJECT_CONTROL.md`
+- `UPI_PAYMENT_INTERVIEW_ROADMAP.md`
+- `ARCHITECTURE_AND_DECISIONS.md`
+- `PAYMENT_CARD_EVIDENCE_MAP.md`
 
 ## Problems encountered
 
-`NOT YET EXECUTED`
+`zxing-cpp` was not initially installed. Version `3.1.1` was installed into the existing `.venv`, and its live Python API was inspected before implementation. The binding exposed the current `create_barcode()` API, `Barcode.to_image()`, and `read_barcode()`.
+
+The first smoke probe generated and decoded the QR but failed while trying to print a non-existent `zxingcpp.Image.width` attribute. Root cause: the binding's image object exposes its dimensions through the Python buffer protocol rather than a `width` attribute. The probe was corrected to use `memoryview(image)`, then verified a 165 by 165 image buffer and the exact decoded URI.
+
+During strict-contract review, Python's `urlsplit()` was observed to normalize an uppercase URI scheme to lowercase. Root cause: relying only on `parsed.scheme` would have accepted `UPI-DEMO`, contrary to the exact lowercase contract. A raw-scheme check was added before parsing, malformed percent escapes were rejected explicitly, and focused cases were added. The final focused suite passed all 21 cases, including controlled decoder-error translation.
+
+The formal independent audit then found `C05-A01` (`MAJOR`): `urlsplit()` also removes raw TAB, newline, and carriage-return characters before later authority validation. As a result, the raw payload `upi-demo://pa<TAB>y?merchant_id=M001` could decode and resolve as `M001`, even though its raw authority was not exactly `pay`. This made the original parser matrix and its claim of complete malformed/wrong-authority coverage incomplete.
+
+Bounded remediation added a raw ASCII control-character guard in `parse_merchant_qr_payload()` before `urlsplit()` or query parsing. The guard rejects `U+0000` through `U+001F` and `U+007F`, without adding a merchant-ID regex or changing valid merchant/payment semantics. Public parser regressions cover TAB, newline, and carriage return in the authority and representative scheme, query-key, and query-value locations.
+
+The subsequent independent re-audit resolved `C05-A01`, but found `C05-A02` (`MAJOR`): syntactically complete percent escapes were passed to `parse_qsl()` with replacement decoding, so invalid UTF-8 such as `merchant_id=%C3%28` became `�(` and was accepted. Percent-encoded ASCII controls such as `%00`, `%0A`, and `%7F` could similarly become accepted merchant-ID content. This meant malformed-payload rejection was still incomplete.
+
+Bounded C05-A02 remediation retained the C05-A01 raw-input guard, configures `parse_qsl()` with UTF-8 and `errors="strict"`, and rejects decoded ASCII controls in every parsed query key and value before the one-`merchant_id` contract is accepted. It adds direct public-parser regressions for invalid UTF-8, malformed percent syntax, encoded controls in values and a query key, canonical input, and valid UTF-8 merchant text. Mutation-resistance tests demonstrate that replacement decoding, removal of the decoded-control guard, or removal of percent-triplet validation restores acceptance of representative invalid inputs.
+
+The second independent re-audit resolved C05-A02 but found `C05-A03` (`MAJOR`): the parser rejected only a non-empty `parsed.fragment`, so `upi-demo://pay?merchant_id=M001#` had an empty parsed fragment and incorrectly resolved to `M001`. This violated the canonical requirement that no fragment is permitted.
+
+Bounded C05-A03 remediation rejects a raw `#` delimiter before URI parsing, including when its fragment text is empty, while leaving percent-encoded `%23` available as merchant data. Direct public-parser regressions cover empty and non-empty fragments, canonical input, percent-encoded hash input, and a mutation-resistance proof that removal of the raw-delimiter guard restores the original empty-fragment acceptance.
 
 ## Tests
 
-`NOT YET EXECUTED`
+Executed against `zxing-cpp 3.1.1` and the healthy local PostgreSQL Compose service:
+
+```text
+QR dependency import/version check: PASS — 3.1.1
+QR generation/decode smoke: PASS — decoded merchant_id M001
+C05 focused suite: 21 passed
+C04 regression: 19 passed
+C03 regression: 3 passed
+full suite: 62 passed
+compileall: PASS
+pip check: PASS — No broken requirements found
+git diff --check: PASS
+```
+
+No skipped, xfailed, unexpectedly deselected tests, or warnings were reported.
+
+### C05-A01 remediation validation
+
+Executed after the formal independent audit against the healthy local PostgreSQL Compose service:
+
+```text
+Focused C05-A01 control-character regressions: 6 passed (the targeted selection intentionally deselected 21 other C05 tests)
+Direct real-QR audit probes: PASS — TAB, newline, and carriage-return authority variants decode as raw text but are rejected with INVALID_QR_PAYLOAD
+Canonical payload probe: PASS — upi-demo://pay?merchant_id=M001 → M001
+C05 focused suite: 27 passed
+C04 regression: 19 passed
+C03 regression: 3 passed
+full suite: 68 passed
+```
+
+At the end of C05-A01 remediation, the formal independent audit remained `FAIL` until a separate independent re-audit verified the fix. The subsequent audit resolved C05-A01 and found C05-A02; the final independent re-audit record below supersedes this historical state.
+
+### C05-A02 remediation validation
+
+The independent re-audit that found C05-A02 was `FAIL`; C05-A01 is `RESOLVED`. The following bounded remediation validation was executed afterward against the healthy local PostgreSQL Compose service:
+
+```text
+Focused C05-A02 regressions: 16 passed; 27 other C05 tests intentionally deselected by the focused selection
+Direct parser probes: PASS — %C3%28, %C3, %, %0, %GG, %00, %09, %0A, %0D, %1F, and %7F rejected with INVALID_QR_PAYLOAD
+Canonical parser probe: PASS — upi-demo://pay?merchant_id=M001 → M001
+Valid UTF-8 parser probe: PASS — upi-demo://pay?merchant_id=M%C3%A5l → Mål
+C05-A01 authority probes: PASS — raw TAB, newline, and carriage return variants rejected with INVALID_QR_PAYLOAD
+C05 focused suite: 43 passed
+C04 regression: 19 passed
+C03 regression: 3 passed
+full suite: 84 passed
+compileall: PASS
+pip check: PASS — No broken requirements found
+git diff --check: PASS
+```
+
+No skips, xfails, warnings, or unintentional deselections were reported. The 27 focused-test deselections above were intentional and are not counted as passes. At the end of C05-A02 remediation, another independent re-audit was pending; that audit resolved C05-A02 and found C05-A03.
+
+### C05-A03 remediation validation
+
+The second independent re-audit that found C05-A03 was `FAIL`; C05-A01 and C05-A02 are `RESOLVED`. The following bounded remediation validation was executed afterward against the healthy local PostgreSQL Compose service:
+
+```text
+Focused C05-A03 regressions: 5 passed; 43 other C05 tests intentionally deselected by the focused selection
+Direct parser probes: PASS — empty and non-empty raw fragment delimiters rejected with INVALID_QR_PAYLOAD
+Canonical parser probe: PASS — upi-demo://pay?merchant_id=M001 → M001
+Percent-encoded hash probe: PASS — upi-demo://pay?merchant_id=M%23001 → M#001
+C05-A01 probes: PASS — raw TAB, newline, and carriage-return authority variants rejected with INVALID_QR_PAYLOAD
+C05-A02 probes: PASS — malformed UTF-8, malformed percent syntax, and decoded ASCII-control variants rejected with INVALID_QR_PAYLOAD; valid M%C3%A5l → Mål
+C05 focused suite: 48 passed
+C04 regression: 19 passed
+C03 regression: 3 passed
+full suite: 89 passed
+compileall: PASS
+pip check: PASS — No broken requirements found
+git diff --check: PASS
+```
+
+No skips, xfails, warnings, or unintentional deselections were reported. The 43 focused-test deselections above were intentional and are not counted as passes. At the end of C05-A03 remediation, the final independent re-audit was pending.
+
+## Final Independent Re-Audit Record
+
+Final independent re-audit: `PASS`.
+
+- C05-A01: `RESOLVED`
+- C05-A02: `RESOLVED`
+- C05-A03: `RESOLVED`
+- Findings: `NONE`
+- All 16 C05 acceptance items: independently confirmed `PASS`
+- C05 focused tests: `48/48 passed`
+- C04 regression: `19/19 passed`
+- C03 regression: `3/3 passed`
+- Full suite: `89/89 passed`
+- compileall, pip check, and `git diff --check`: `PASS`
+- Architecture boundary, real QR generation/decode, C04 safety preservation, and scope review: `PASS`
+- C05 Exit Gate: `PASS`
+- READY_FOR_HUMAN_DELIVERY_APPROVAL: `YES`
+
+Before controlled delivery, C05 was `IN_PROGRESS` pending explicit human delivery approval and controlled Git delivery. The controlled delivery record below supersedes that pending state.
+
+## C05 Controlled Delivery Record
+
+- Human delivery approval: `GRANTED`
+- Final independent re-audit: `PASS`
+- Findings: `NONE`
+- Exit Gate: `PASS`
+- Delivery status: `COMPLETE`
+- Delivery branch: `main`
+- C05 focused suite: `48 passed`
+- C04 regression: `19 passed`
+- C03 regression: `3 passed`
+- Full suite: `89 passed`
+- `compileall`: `PASS`
+- `pip check`: `PASS — No broken requirements found`
+- `git diff --check`: `PASS`
+- Push result and the immutable delivery SHA are reported in the final delivery output after post-delivery verification; they are intentionally not duplicated here to avoid a self-referential documentation commit.
+
+Evidence artifacts are the C05 module and focused test file listed above, the executed command outputs, and this traceable record. QR images were generated and decoded in memory; no runtime QR artifact, secret, or customer data was persisted.
+
+## Planned C05 Acceptance Contract
+
+C05 must eventually prove:
+
+1. a real QR is generated;
+2. the generated QR contains the exact canonical merchant URI;
+3. the QR can be decoded internally;
+4. decoded `merchant_id` equals the intended merchant;
+5. malformed payload is rejected;
+6. wrong scheme is rejected;
+7. wrong authority/host is rejected;
+8. missing `merchant_id` is rejected;
+9. duplicate `merchant_id` is rejected;
+10. extra query parameters are rejected;
+11. fragment-bearing payload is rejected;
+12. an unknown merchant cannot produce a successful payment;
+13. a valid decoded `merchant_id` can initiate the existing conventional payment flow;
+14. amount remains outside the QR;
+15. existing C04 safety behavior remains unchanged;
+16. QR logic contains no ledger, persistence, or idempotency implementation.
+
+## EXECUTED Requirement / Invariant Traceability
+
+| Requirement / invariant | Implementation | Test / evidence | Result |
+|---|---|---|---|
+| Real QR generated, exact URI encoded, internally decoded, intended merchant returned | `build_merchant_qr_payload()`, `generate_merchant_qr()`, `decode_merchant_qr()` | `test_real_qr_generation_and_decode_round_trip_uses_zxingcpp` independently invokes `zxingcpp.read_barcode()` on the generated image before strict parsing | PASS |
+| Malformed payload and wrong scheme rejected | raw exact-scheme check, raw/decoded ASCII-control guards, complete-percent validation, and strict UTF-8 query decoding | initial parametrized noncanonical test plus C05-A01 and C05-A02 public-parser regressions | Initial audit: `FAIL` for raw-control normalization; C05-A01 independent re-audit: `RESOLVED`; subsequent re-audit: `FAIL` for C05-A02 malformed decoding; final independent re-audit: `PASS` |
+| Wrong authority and non-empty path rejected | raw ASCII-control guard, exact `netloc`, and empty-path checks | initial wrong-authority/path cases plus TAB/newline/carriage-return authority regressions | Initial independent audit: `FAIL` for raw-control normalization; final independent re-audit: `PASS` |
+| Missing, empty, or duplicate merchant ID rejected | exact one-item query contract and non-empty decoded value | parametrized missing, empty, whitespace-only, and duplicate cases | PASS |
+| Extra query parameters and fragments rejected | exact one-item query contract and raw fragment-delimiter guard | parametrized extra-amount/non-empty-fragment cases plus C05-A03 empty-fragment and percent-encoded-hash public-parser regressions | Initial audits did not cover an empty fragment delimiter; second independent re-audit: `FAIL` for C05-A03; final independent re-audit: `PASS` |
+| Unknown merchant cannot successfully pay | QR returns `M404`; existing C04 account validation remains authoritative | `test_unknown_decoded_merchant_uses_existing_c04_rejection` proves HTTP 404 `ACCOUNT_NOT_FOUND` and unchanged database state | PASS |
+| Valid decoded merchant initiates the existing conventional path | decoded `merchant_id` is placed in the existing `POST /payments` request | `test_valid_decoded_merchant_uses_existing_safe_payment_path` proves SUCCESS, balances `90000/10000`, one Payment, one Transaction, and one idempotency record | PASS |
+| Amount and all other payment/ledger fields remain outside QR | merchant-only payload builder | `test_canonical_payload_contains_only_merchant_identity` | PASS |
+| C04 safety remains intact and is not bypassed | unchanged API/service/ledger implementation; replay uses existing idempotency path | valid C05 integration replays once without a second debit; focused C04 regression 19 passed | PASS |
+| QR has no ledger, persistence, or idempotency implementation | isolated imports limited to `urllib` and `zxingcpp` | `test_qr_module_is_isolated_from_payment_and_persistence_logic` plus source/diff review | PASS |
+
+## Deterministic Invariant Result
+
+Original Phase 1 result: `PASS`. The formal independent audit found `C05-A01` because the original finite parser matrix omitted raw ASCII-control-character normalization cases, so it did not fully prove malformed-payload or wrong-authority rejection. C05-A01 bounded remediation and independent re-audit resolved that finding. The subsequent independent re-audit found `C05-A02`: the matrix also omitted invalid UTF-8 and decoded-control percent-encoding cases; C05-A02 remediation and independent re-audit resolved it. The next independent re-audit found `C05-A03`: an empty raw fragment delimiter was omitted from the deterministic matrix. C05-A03 bounded remediation added direct public-parser and mutation-resistance evidence that pass. The final independent re-audit resolved C05-A01, C05-A02, and C05-A03, found no additional findings, and returned `PASS`.
+
+## Property Testing Result
+
+Generated property testing is `NOT_APPLICABLE FOR C05 PHASE 1`. The canonical grammar is intentionally finite and strict. The original deterministic-matrix rationale overstated its coverage until C05-A01, C05-A02, and C05-A03 added raw-control, malformed-percent, strict-UTF-8, decoded-control, and raw-fragment-delimiter cases. No Hypothesis dependency was added.
+
+## Mutation Testing Result
+
+Mutation testing is `NOT_APPLICABLE FOR C05 PHASE 1`. The exact payload, remediated parser branch outcomes, real library round trip, excluded-field assertions, and import-boundary assertions provide direct evidence for the bounded QR adapter. No mutation dependency was added.
+
+## Known limitations
+
+- QR generation and decoding are internal/in-memory only; camera and device integration remain deferred.
+- C05 supports one static merchant-identity URI and intentionally excludes amount, order data, signatures, and expiry.
+- The QR layer does not pre-resolve merchants; unknown merchants are rejected only when the existing payment path validates accounts.
+- No UI, blockchain integration, benchmark, authentication, production bank integration, or real-money behavior is implemented.
+
+## C05 Phase 1 Learning Record
+
+### What did we build?
+
+We built a strict merchant-only QR adapter that constructs the canonical URI, generates a real QR image, decodes that image through `zxing-cpp`, validates the decoded URI, and returns only `merchant_id` for the existing payment path.
+
+### Why did we build it this way?
+
+Keeping QR mechanics in a dedicated module preserves the boundary between initiation and settlement. The existing API and C04 service/ledger path remain the single payment engine.
+
+### What did we initially misunderstand?
+
+The installed binding's image dimensions are exposed through the buffer protocol rather than a `width` attribute, and standard URI parsing normalizes both scheme case and raw control characters even though the approved contract requires exact raw URI structure.
+
+### What failed?
+
+The first smoke command failed only while printing `Image.width`; QR generation and decoding had already executed. No implementation or final validation test failed.
+
+### Why did it fail?
+
+The smoke probe assumed an image-object attribute that the installed nanobind API does not expose.
+
+### How was it fixed?
+
+The probe and tests use `memoryview(image)` for image evidence. The parser checks the raw scheme and raw ASCII control characters before `urlsplit()`, and rejects malformed percent escapes, preventing normalization from weakening the contract.
+
+### What other design could have been used?
+
+Separate generation and decoding libraries, a camera stack, or a new QR API endpoint were possible. They were not selected because `zxing-cpp` provides both required operations and the existing payment endpoint already owns submission.
+
+### What trade-off did we accept?
+
+The QR module depends on a native binding and supports only the bounded static merchant URI, in exchange for one real generator/decoder dependency and a small auditable surface.
+
+### What test proves the result?
+
+The primary real-QR test independently decodes the generated image through `zxingcpp.read_barcode()` and then verifies the module returns `M001`. Database-backed API tests prove unknown-merchant rejection and one safe successful/replayed payment.
+
+### What would we do differently in a production payment system?
+
+A production design could add signed and expiring payloads, merchant-directory controls, authenticated callers, device scanning, and operational telemetry after defining those requirements explicitly.
+
+### What did this Card teach us?
+
+Library API assumptions and URI normalization both need executable checks. A tiny initiation adapter can provide real QR evidence while leaving payment correctness entirely in the already-tested application and ledger path.
+
+## C05 Phase 1 Self-Audit
+
+Original Phase 1 result: `PASS — READY_FOR_INDEPENDENT_AUDIT`.
+
+The completed diff and source were reviewed against all 16 planned acceptance items. The review found no C06+ work, QR-to-ledger coupling, duplicate payment or merchant-lookup logic, amount or payment fields in the QR, alternate accepted payload format, deprecated `write_barcode()` usage, unnecessary dependency, mocked/false-green primary QR proof, weakened C04 behavior, undocumented changed file, secret, or stale live state. Protected C03/C04 implementation files are unchanged, and C06 remains `NOT_STARTED` and unauthorized.
+
+The initial formal independent audit result was `FAIL` on `C05-A01` (`MAJOR`); the first independent re-audit resolved C05-A01 and returned `FAIL` on C05-A02 (`MAJOR`). The second independent re-audit resolved C05-A02 and returned `FAIL` on C05-A03 (`MAJOR`). The final independent re-audit resolved C05-A01, C05-A02, and C05-A03, found `NONE` remaining, and returned `PASS`.
+
+At that pre-delivery point, human delivery approval was `NOT YET GRANTED` and Git delivery was `NOT PERFORMED`. The subsequent controlled delivery record supersedes that pending state.
 
 ## Exit Gate
 
@@ -1589,6 +1896,8 @@ Real camera integration adds frontend/device complexity but contributes little t
 - QR resolves to correct merchant
 - invalid payload rejected
 - payment can be initiated from decoded QR data
+
+Original Phase 1 Exit Gate self-assessment: `PASS — SUBJECT TO INDEPENDENT AUDIT`. The formal independent audit set the C05 Exit Gate to `FAIL` for `C05-A01`; the first independent re-audit resolved C05-A01 but found C05-A02, and the second resolved C05-A02 but found C05-A03. The final independent re-audit resolved C05-A01, C05-A02, and C05-A03, found `NONE` remaining, and returned `PASS`. C05 Exit Gate: `PASS`. READY_FOR_HUMAN_DELIVERY_APPROVAL: `YES`. The subsequent controlled delivery record records human approval and completion.
 
 ---
 

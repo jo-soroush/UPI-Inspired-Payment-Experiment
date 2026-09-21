@@ -304,9 +304,15 @@ The frontend is not the research question.
 
 ## D11 — QR
 
-**Decision:** Generate a real QR payload.
+**Decision:** Generate a real QR payload using the strict C05 merchant-URI contract.
 
 **Status:** ADOPT
+
+The only canonical C05 merchant QR payload is:
+
+```text
+upi-demo://pay?merchant_id=<single-non-empty-merchant-id>
+```
 
 Example:
 
@@ -314,7 +320,27 @@ Example:
 upi-demo://pay?merchant_id=M001
 ```
 
-For the interview version, scan may be simulated inside the demo.
+C05 parsing is strict: scheme `upi-demo`, authority/host `pay`, empty path, exactly one non-empty `merchant_id` query parameter, no duplicate or additional query parameters, and no fragment. Malformed payloads, wrong schemes, wrong authorities/hosts, and missing merchant IDs are rejected. C05 adds no merchant-ID regex beyond existing project/domain validation.
+
+The QR contains merchant identity only. Amount, payer ID, payment ID, idempotency key, status, transaction ID, ledger choice, and persistence information remain outside the QR. Structured JSON is not an equivalent C05 payload.
+
+For the interview version, scan may be simulated inside the application or test path; real camera integration is not required.
+
+The QR layer ends after parsing and returning `merchant_id`. The decoded value enters the existing payment boundary:
+
+```text
+QR initiation
+→ FastAPI/application boundary
+→ PaymentService
+→ LedgerInterface
+→ ConventionalLedger
+```
+
+Unknown merchants are rejected by the existing C04 account-validation behavior. C05 does not implement a merchant database, payment engine, or ledger behavior.
+
+C05 reuses the delivered C04 payment-safety path and does not duplicate payment identity, idempotency, fingerprinting, replay, duplicate, conflict, balance, persistence, transaction, rollback, or error semantics.
+
+The planned minimal C05 dependency for real QR generation and internal/test decoding is `zxing-cpp`; installation belongs to authorized C05 implementation.
 
 **Real camera scanning:** WATCH
 

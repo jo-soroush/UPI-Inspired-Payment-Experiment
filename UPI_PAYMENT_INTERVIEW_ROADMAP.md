@@ -574,32 +574,49 @@ All safety tests pass.
 
 Connect the payment system to a simple merchant QR flow.
 
-### Example QR Payload
+### Canonical QR Payload
 
-```json
-{
-  "merchant_id": "M001"
-}
+```text
+upi-demo://pay?merchant_id=<single-non-empty-merchant-id>
 ```
 
-The customer selects or enters the payment amount after scanning.
+Example:
 
-Alternative future format:
-
-```json
-{
-  "merchant_id": "M001",
-  "amount": 100,
-  "currency": "SEK",
-  "reference": "ORDER-001"
-}
+```text
+upi-demo://pay?merchant_id=M001
 ```
+
+The C05 parser is strict: the scheme is exactly `upi-demo`, the authority/host is exactly `pay`, the path is empty, the query contains exactly one non-empty `merchant_id`, and there are no duplicate parameters, additional query parameters, or fragments. Malformed payloads, wrong schemes, wrong authorities/hosts, missing merchant IDs, duplicate merchant IDs, extra query parameters, and fragments are rejected. No additional merchant-ID regex is imposed by C05.
+
+The QR contains merchant identity only. Amount, payer ID, payment ID, idempotency key, status, transaction ID, ledger choice, and persistence information remain outside the QR. The customer selects or enters the payment amount after decoding.
+
+### Integration Boundary
+
+QR parsing ends after returning `merchant_id`. The decoded value is passed into the existing payment request path:
+
+```text
+QR decode
+→ merchant_id
+→ FastAPI/application payment boundary
+→ PaymentRequest.merchant_id
+→ PaymentService
+→ LedgerInterface
+→ ConventionalLedger
+```
+
+An unknown merchant is rejected by the existing C04 account validation behavior. C05 does not implement a merchant database, account lookup, payment validation, or ledger behavior.
+
+### Dependency
+
+The planned minimal C05 dependency for real QR generation and internal/test decoding is `zxing-cpp`. It is not installed until C05 implementation is authorized.
 
 ### Important Boundary
 
 QR is only the payment initiation mechanism.
 
 The ledger remains responsible for the actual money movement.
+
+C05 reuses the delivered C04 payment-safety path and does not reimplement payment IDs, idempotency keys, canonical fingerprints, replay or duplicate handling, conflicts, balance validation, persistence safety, transaction execution, rollback, or error semantics.
 
 ### Exit Gate
 
@@ -1474,15 +1491,13 @@ Dataset generation must be repeatable from a fixed seed or deterministic fixture
 
 ### QR Payload
 
-Use a small payment URI or structured payload containing the merchant identity.
+Use the canonical C05 merchant URI above. Structured JSON is not an equivalent C05 payload.
 
 Example:
 
 ```text
 upi-demo://pay?merchant_id=M001
 ```
-
-or equivalent structured data.
 
 ### Demo Behavior
 
@@ -1621,7 +1636,7 @@ PostgreSQL
 SQLAlchemy or equivalent small persistence layer
 pytest
 HTML/CSS/JavaScript or minimal server-rendered UI
-QR generation/decoding library
+QR generation/decoding library: zxing-cpp for C05
 Anvil
 Solidity
 web3.py

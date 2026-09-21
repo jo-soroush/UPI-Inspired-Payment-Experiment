@@ -13,14 +13,26 @@ It should stay short and current.
 Project: UPI-Inspired Payment Experiment
 Overall Status: IN_PROGRESS
 Active Card: NONE
-Last Completed Card: C04
-Next Allowed Card: C05
-Execution Authorization: NONE / NOT_GRANTED
+Last Completed Card: C05
+Next Allowed Card: C06
+Execution Authorization: NONE
 C02 Authorization: NOT_GRANTED
 C03 Authorization: NOT_GRANTED
 C04 Authorization: NOT_GRANTED
+C05 Authorization: CLOSED/COMPLETED
+C06 Authorization: NOT_GRANTED
 Current Branch: main
 Current Blocker: NONE
+Current Work: NONE — C05 completed; C06 sequence-eligible only
+C05 Final Independent Re-Audit: PASS
+C05-A01: RESOLVED
+C05-A02: RESOLVED
+C05-A03: RESOLVED
+C05 Findings: NONE
+C05 Exit Gate: PASS
+C05 Ready for Human Delivery Approval: YES
+C05 Human Delivery Approval: GRANTED
+C05 Git Delivery: delivery performed by this task
 Baseline Readiness: COMPLETE
 Interview Demo Ready: NO
 Benchmark Complete: NO
@@ -38,7 +50,7 @@ Next Allowed Card indicates sequence eligibility only. Starting that Card still 
 | C02 | Domain Models | COMPLETE |
 | C03 | Conventional Ledger | COMPLETE |
 | C04 | Payment Safety & Failure Handling | COMPLETE |
-| C05 | QR Payment Initiation | NOT_STARTED |
+| C05 | QR Payment Initiation | COMPLETE |
 | C06 | Minimal Demo UI | NOT_STARTED |
 | C07 | Blockchain Ledger | NOT_STARTED |
 | C08 | Benchmark & Comparative Experiment | NOT_STARTED |
@@ -148,6 +160,13 @@ Record only meaningful baseline changes.
 | 2026-09-19 | C03 completed | Human-approved delivery after independent audit PASS and Exit Gate PASS | Implementation delivery: `e626bc10eab7a33c5a03042e41a706d989168548`; completion evidence/state: subsequent documentation record |
 | 2026-09-20 | C04 started | Explicit human authorization for C04 Phase 1 after the read-only preflight decisions were resolved | C04 implementation instruction; authorization is limited to C04 |
 | 2026-09-20 | C04 completed | Human delivery approval granted after final validation, final independent documentation confirmation PASS, and Exit Gate PASS; controlled delivery completed on `main` | C04 delivery status: COMPLETE; immutable delivery SHA is determined by Git and reported in the final delivery output; no C05 authorization or advancement |
+| 2026-09-20 | C05 started | Explicit human authorization for C05 Phase 1 after canonical QR contract lock and independent confirmation | C05 implementation instruction; authorization is limited to C05 and does not authorize C06 |
+| 2026-09-20 | C05 Phase 1 implemented | QR implementation, deterministic contract tests, C03/C04 regressions, full suite, evidence update, and self-audit passed | C05 remains IN_PROGRESS; independent audit, human delivery approval, and Git delivery are pending |
+| 2026-09-20 | C05-A01 remediated | Formal independent audit found raw URI control-character normalization; bounded parser guard and regression evidence completed | C05 remains IN_PROGRESS; independent re-audit, human delivery approval, and Git delivery are pending |
+| 2026-09-21 | C05-A02 remediated | Independent re-audit found malformed UTF-8 percent decoding and decoded control-character acceptance; bounded strict-decoding and regression evidence completed | C05 remains IN_PROGRESS; independent re-audit, human delivery approval, and Git delivery are pending |
+| 2026-09-21 | C05-A03 remediated | Independent re-audit found empty-fragment-delimiter acceptance; bounded raw-fragment guard and regression evidence completed | C05 remains IN_PROGRESS; independent re-audit, human delivery approval, and Git delivery are pending |
+| 2026-09-21 | C05 final independent re-audit passed | C05-A01, C05-A02, and C05-A03 independently verified resolved; no findings remained | C05 remains IN_PROGRESS pending explicit human delivery approval and controlled Git delivery |
+| 2026-09-21 | C05 completed | Human delivery approval granted after final validation and independent re-audit PASS; controlled Git delivery performed by this task | C05 delivery status: COMPLETE; final immutable SHA reported in delivery output |
 
 ---
 
