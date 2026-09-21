@@ -265,7 +265,7 @@ production blockchain operations
 
 The UI exists only to make the experiment demonstrable.
 
-For C06, use a minimal TypeScript web UI as the presentation/initiation layer calling the existing FastAPI boundary. React is optional and not selected by default; choose the smallest frontend structure that satisfies the demo. Do not add a larger frontend framework unless a concrete C06 requirement justifies it.
+For C06, use a minimal TypeScript web UI as the presentation/initiation layer calling the existing FastAPI boundary. React is optional and not selected by default; choose the smallest frontend structure that satisfies the demo. Do not add a larger frontend framework unless a concrete C06 requirement justifies it and explicit human approval is recorded.
 
 The UI must not own payment correctness, balance rules, merchant validation, idempotency, payment fingerprinting, persistence, ledger execution, rollback, or blockchain semantics.
 

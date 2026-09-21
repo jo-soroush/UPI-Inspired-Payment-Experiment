@@ -13,17 +13,30 @@ It should stay short and current.
 Project: UPI-Inspired Payment Experiment
 Overall Status: IN_PROGRESS
 Active Card: NONE
-Last Completed Card: C05
-Next Allowed Card: C06
+Last Completed Card: C06
+Next Allowed Card: C07
 Execution Authorization: NONE
 C02 Authorization: NOT_GRANTED
 C03 Authorization: NOT_GRANTED
 C04 Authorization: NOT_GRANTED
 C05 Authorization: CLOSED/COMPLETED
-C06 Authorization: NOT_GRANTED
+C06 Authorization: CLOSED/COMPLETED
+C07 Authorization: NOT_GRANTED
 Current Branch: main
 Current Blocker: NONE
-Current Work: NONE — C05 completed; C06 sequence-eligible only
+Current Work: C06 delivered; project paused pending explicit C07 authorization
+C06 Phase 1 Verification: PASS
+C06 Final Independent Re-Audit: PASS
+C06 Findings: NONE
+C06-A01: RESOLVED
+C06-A02: RESOLVED
+C06-A03: RESOLVED
+C06 Exit Gate: PASS
+C06 Ready for Human Delivery Approval: YES
+C06 Human Delivery Approval: GRANTED
+C06 Git Delivery: COMPLETE
+C06 Card Status: COMPLETE
+C07 Card Status: NOT_STARTED
 C05 Final Independent Re-Audit: PASS
 C05-A01: RESOLVED
 C05-A02: RESOLVED
@@ -51,7 +64,7 @@ Next Allowed Card indicates sequence eligibility only. Starting that Card still 
 | C03 | Conventional Ledger | COMPLETE |
 | C04 | Payment Safety & Failure Handling | COMPLETE |
 | C05 | QR Payment Initiation | COMPLETE |
-| C06 | Minimal Demo UI | NOT_STARTED |
+| C06 | Minimal Demo UI | COMPLETE |
 | C07 | Blockchain Ledger | NOT_STARTED |
 | C08 | Benchmark & Comparative Experiment | NOT_STARTED |
 | C09 | Interview Demo & Engineering Report | NOT_STARTED |
@@ -167,6 +180,13 @@ Record only meaningful baseline changes.
 | 2026-09-21 | C05-A03 remediated | Independent re-audit found empty-fragment-delimiter acceptance; bounded raw-fragment guard and regression evidence completed | C05 remains IN_PROGRESS; independent re-audit, human delivery approval, and Git delivery are pending |
 | 2026-09-21 | C05 final independent re-audit passed | C05-A01, C05-A02, and C05-A03 independently verified resolved; no findings remained | C05 remains IN_PROGRESS pending explicit human delivery approval and controlled Git delivery |
 | 2026-09-21 | C05 completed | Human delivery approval granted after final validation and independent re-audit PASS; controlled Git delivery performed by this task | C05 delivery status: COMPLETE; final immutable SHA reported in delivery output |
+| 2026-09-21 | C06 authorized recovery and verification started | Explicit human authorization adopts the pre-existing uncommitted C06 candidate for formal inspection and verification; it does not retroactively authorize its earlier creation | Committed baseline `267ef0644b692e3322cacf93cb282d9b409b1e46` had C06 `NOT_STARTED` / `NOT_GRANTED`; no prior C06 delivery or approval existed |
+| 2026-09-21 | C06 independent audit failed | Independent spec-based audit found C06-A01 (bootstrap `hostaddr` remote-target bypass) and C06-A02 (confirmed payment success overwritten by refresh failure) | C06 remains IN_PROGRESS; Exit Gate and delivery approval remain pending |
+| 2026-09-21 | C06-A01/A02 remediated | Bounded fixes and deterministic regressions completed for both findings | Independent re-audit is required; C06 remains IN_PROGRESS |
+| 2026-09-21 | C06 independent re-audit failed | The re-audit confirmed C06-A01/A02 resolved but found C06-A03: libpq `service=`/environment target resolution could bypass the destructive bootstrap target guard | C06 remains IN_PROGRESS; Exit Gate and delivery approval remain pending |
+| 2026-09-21 | C06-A03 remediated | Bootstrap now uses an explicit validated local target and suppresses implicit libpq target environment during destructive operations | Independent re-audit is required; C06 remains IN_PROGRESS |
+| 2026-09-21 | C06 final independent re-audit passed | C06-A01, C06-A02, and C06-A03 independently verified resolved; no findings remained; Exit Gate passed | C06 remains IN_PROGRESS pending explicit human delivery approval and controlled Git delivery |
+| 2026-09-21 | C06 completed | Human delivery approval granted after final independent re-audit PASS and Exit Gate PASS; controlled delivery completed on `main` | C06 status: COMPLETE; C07 remains NOT_STARTED/NOT_GRANTED; immutable delivery SHA is reported by Git after commit |
 
 ---
 

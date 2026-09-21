@@ -241,7 +241,7 @@ The UI exists to make the demo understandable.
 
 It must not become a separate frontend project.
 
-The approved C06 frontend language is TypeScript. Use the smallest minimal web UI structure that satisfies the demo. React or another framework is not required by default and must not be introduced without a C06 justification.
+The approved C06 frontend language is TypeScript. Use the smallest minimal web UI structure that satisfies the demo. React or another framework is not required by default and must not be introduced without C06 evidence and explicit human approval.
 
 The TypeScript UI calls the existing FastAPI backend and remains a presentation/initiation layer. It must not own payment correctness, balance rules, merchant validation, idempotency, payment fingerprinting, persistence, ledger execution, rollback, or blockchain semantics.
 
@@ -683,6 +683,21 @@ Transaction History:
 
 The C06 frontend is a minimal TypeScript web UI. Framework selection, if any, is deferred to C06 preflight/implementation and must remain bounded to the demo.
 
+### Contract-Locked C06 Scope
+
+This planned scope is locked before C06 implementation; it does not authorize implementation or change C06 status.
+
+- Plain TypeScript, HTML, and CSS compiled with `tsc`; React and Vite are not selected by default.
+- FastAPI serves the compiled UI and static assets on the same origin as the API.
+- The fixed presentation fixture is `C001` paying `M001` 100 SEK; fixture IDs are not a customer or merchant directory.
+- The UI presents SEK with `.` as its sole decimal separator and deterministically transports integer öre to the existing payment boundary without binary floating-point multiplication.
+- Opaque `payment_id` and `idempotency_key` values may be generated for a new request, but C04 remains responsible for canonical fingerprints, idempotency, conflicts, validation, execution, and rollback.
+- C06 adds only the thin FastAPI balance, history, QR-delivery, static-serving, and local demo-bootstrap adapters required to demonstrate the delivered conventional path.
+- Conventional is the only functional ledger. Blockchain is shown only as unavailable/disabled C07 work; no selector value is sent to the current payment API and no blockchain behavior is simulated.
+- Any UI request-duration display is explicitly local/API-observed only. It is not C08 benchmark ledger latency.
+
+`ARCHITECTURE_AND_DECISIONS.md` D10 owns the detailed C06 route, QR, bootstrap, and transport contracts. `PAYMENT_CARD_EVIDENCE_MAP.md` owns the planned acceptance, invariants, and evidence record.
+
 ### Exit Gate
 
 C06 passes when:
@@ -691,6 +706,7 @@ C06 passes when:
 - the conventional flow works end-to-end
 - the UI is structurally ready to select multiple ledger implementations
 - blockchain execution is not required until C07
+- the locked C06 acceptance contract has passing executed evidence without changing C04/C05 semantics
 
 C07 connects `BlockchainLedger` to the existing shared UI/application path. C09 packages the completed paths and does not add a major product feature.
 

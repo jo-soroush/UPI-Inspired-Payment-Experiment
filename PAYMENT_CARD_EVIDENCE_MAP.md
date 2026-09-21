@@ -1905,7 +1905,11 @@ Original Phase 1 Exit Gate self-assessment: `PASS — SUBJECT TO INDEPENDENT AUD
 
 ## Status
 
-`NOT_STARTED`
+`IN_PROGRESS — AUTHORIZED VERIFICATION OF PRE-EXISTING CANDIDATE IMPLEMENTATION`
+
+## Authorization and provenance
+
+The committed baseline at `267ef0644b692e3322cacf93cb282d9b409b1e46` recorded C06 as `NOT_STARTED` and `NOT_GRANTED`. A substantial uncommitted C06 candidate implementation existed before the current explicit human authorization. That authorization adopts the candidate for formal inspection and verification only; it does not retroactively authorize the earlier work, grant delivery approval, or mark C06 complete.
 
 ## Goal
 
@@ -1953,19 +1957,205 @@ The UI remains a presentation/initiation layer and must not own payment correctn
 
 ## Why React is not the default
 
-React is not required. It may be considered only if C06 implementation evidence shows that a smaller TypeScript structure cannot support the bounded demo requirements.
+React is not required. It may be considered only if C06 implementation evidence shows that a smaller TypeScript structure cannot support the bounded demo requirements and explicit human approval is recorded.
+
+## C06 Contract Lock — Planned Only
+
+This contract was locked before implementation. It remains the canonical design contract for the previously created candidate now under authorized verification. Executed evidence is recorded only after the corresponding verification command completes.
+
+### Frontend and demo fixture
+
+- Use plain TypeScript, HTML, and CSS compiled with `tsc`.
+- Serve compiled assets and API routes same-origin from FastAPI; no separate frontend runtime server or primary-demo CORS requirement.
+- Use no framework by default. React, Vite, state-management libraries, and UI libraries are not selected.
+- Present only fixture identities `C001` and `M001`; they are not a customer or merchant directory.
+- Begin the prepared local demo with `C001 = 100000` öre and `M001 = 0` öre; submit `10000` öre and show `SUCCESS`, `90000` öre, and `10000` öre.
+
+### SEK-to-öre transport
+
+The presentation input accepts only a non-negative decimal string matching:
+
+```text
+^(0|[1-9][0-9]*)(?:\.[0-9]{1,2})?$
+```
+
+`.` is the sole decimal separator. No whitespace, sign, comma, grouping separator, scientific notation, or more than two fractional digits is accepted. Normalize no fraction to `00`, one fractional digit to two digits, concatenate the decimal text into öre, and convert only that integer representation for the existing integer `amount` API field. Do not use binary floating-point multiplication. Reject malformed presentation input and values outside JavaScript's safe-integer range for usability only; the FastAPI/C04 path remains authoritative for amount validity and all business rules.
+
+```text
+100    → 10000 öre
+100.0  → 10000 öre
+100.00 → 10000 öre
+```
+
+### Request identifiers
+
+The current `POST /payments` contract requires distinct `payment_id` and `idempotency_key` values. For one new user payment intent, the UI may generate opaque values with `crypto.randomUUID()`. It must not compute the canonical payment fingerprint, determine a replay result, or decide an idempotency conflict. It must not automatically retry an ambiguous request; any later retry control must reuse the original payload and identifiers so the C04 backend determines the outcome.
+
+### Planned C06 FastAPI adapters
+
+The detailed route contract is canonical in `ARCHITECTURE_AND_DECISIONS.md` D10. C06 plans only these additions:
+
+| Capability | Planned route / representation | Existing behavior reused | Boundary |
+|---|---|---|---|
+| Balance read | `GET /accounts/{owner_id}/balance` → `owner_id`, `currency`, `balance_ore` | `PaymentService` delegation to `LedgerInterface.get_balance()` | no PostgreSQL detail in API/UI |
+| History read | `GET /transactions` → deterministic list of transaction ID, payment ID, ledger type, status, timestamp | `PaymentService` delegation to `LedgerInterface.list_transactions()` | no filtering, pagination, analytics, or second model |
+| Merchant QR | `GET /merchants/{merchant_id}/qr` → `image/png` | existing C05 QR generator | UI displays only; no TypeScript QR generator/parser |
+| Static UI | `GET /` plus static assets | FastAPI static serving | same-origin API/UI |
+| Demo preparation | explicit local-only bootstrap, not HTTP | schema initialization and deterministic fixture pattern | no browser reset endpoint |
+
+The QR remains the C05 merchant-only URI `upi-demo://pay?merchant_id=M001`; amount stays outside the QR. Existing C05/zxing-cpp capabilities must be proved before adding an image encoder dependency.
+
+### Ledger selector and latency
+
+Conventional is visible, selected, and functional. Blockchain is visible but disabled/unavailable and clearly labeled C07 / not yet implemented. C06 neither sends a ledger selector to `POST /payments` nor simulates blockchain results, receipts, balances, contracts, or web3.py behavior.
+
+The UI may show `Local API request time` or `UI-observed request duration`. It must not call this ledger latency, benchmark latency, blockchain confirmation time, or production latency. C08 owns authoritative ledger-only benchmark measurements.
+
+### Planned acceptance contract
+
+1. A real compiled TypeScript UI exists.
+2. The UI is served through the FastAPI application.
+3. The C001/M001 fixture context is displayed.
+4. A real C05 merchant QR is displayed.
+5. QR semantics remain owned by C05.
+6. User-entered SEK is deterministically transported as integer öre.
+7. Payment is submitted through the existing `POST /payments` boundary.
+8. Opaque UI-generated identifiers remain distinct; C04 owns fingerprints, replay, idempotency conflicts, and validation.
+9. Payment status and transaction identity are displayed from the existing payment response.
+10. Updated C001/M001 balances are read from backend adapters.
+11. Transaction history is displayed from backend read behavior.
+12. UI-observed request duration is explicitly distinguished from C08 benchmark metrics.
+13. Conventional is functional.
+14. Blockchain is visible only as unavailable/disabled until C07.
+15. No frontend payment-correctness logic is authoritative.
+16. C04 safety semantics remain unchanged.
+17. C05 QR semantics remain unchanged.
+18. C07 blockchain implementation remains absent.
+
+### Planned critical invariants and evidence
+
+| Invariant | Planned verification evidence |
+|---|---|
+| Frontend cannot bypass C04 validation or cause a double debit | Existing `POST /payments` API integration plus C04 regression evidence |
+| UI does not compute canonical fingerprints or own replay/conflict semantics | TypeScript source/import review and repeated-request API proof |
+| QR stays merchant-only and C05-owned | QR route response decoded/validated through existing C05 test capability; TypeScript source review |
+| Transported amount is deterministic integer öre | Focused TypeScript conversion checks and API request evidence for `100`, `100.0`, and `100.00` |
+| Displayed balances/history originate from backend state | Balance/history API integration before and after successful payment |
+| Blockchain cannot execute before C07 | UI behavior/source review; no blockchain adapter, contract, web3.py, or receipt path |
+| UI timing is not benchmark timing | UI label/source review; C08 methodology unchanged |
+| No wallet, private key, or blockchain credential enters the browser | Source/dependency review |
+
+### Planned test strategy
+
+Required planned evidence:
+
+1. TypeScript compilation/type-check and production asset preparation pass.
+2. API integration tests cover balance read, history read, QR delivery, static UI serving, and the unchanged `POST /payments` path.
+3. C04 and C05 regression suites pass.
+4. One deterministic browser/demo smoke proves C001 at 1000 SEK, M001 and a real QR visible, 100 SEK submission, `SUCCESS`, 900/100 SEK balances, and visible transaction history.
+
+React/Vitest/Jest and a large browser-testing framework are not required by default. A deterministic browser/demo smoke plus API/integration evidence is sufficient for this bounded interview Card unless actual implementation evidence demonstrates a real gap.
+
+### Explicitly out of C06
+
+- real camera scanning, NFC, React unless later justified and explicitly approved, Next.js/Vue/Svelte/Angular, frontend state-management framework, and design system;
+- authentication, customer directory, merchant directory, wallet, private keys, blockchain execution, smart contracts, web3.py integration, benchmark implementation, production deployment, public blockchain, real bank integration, and real money.
 
 ## Actual implementation
 
-`NOT YET EXECUTED`
+Pre-existing candidate implementation adopted for authorized verification: plain TypeScript source compiled to FastAPI-served static assets; C001/M001 fixture UI; C04 `POST /payments` reuse; thin balance, history, QR-PNG, and static-serving adapters; local-only bootstrap; and C06-focused tests. This implementation was present before authorization and was verified without feature expansion.
 
 ## Problems encountered
 
-`NOT YET EXECUTED`
+No required verification failure or implementation defect was observed in this phase. Non-blocking package-metadata observation: the existing untracked `src/upi_payment_experiment.egg-info/SOURCES.txt` omits `static/app.js` and `static/money.js`, while `pyproject.toml` explicitly configures `static/*` as package data. No package artifact was built in this phase, so fresh-package inclusion was not executed; the configured glob covers all four static files.
 
 ## Test evidence
 
-`NOT YET EXECUTED`
+### Authorized recovery and verification results — 2026-09-21
+
+The following results concern the pre-existing candidate adopted after explicit human authorization; they do not imply retroactive authorization, independent-audit approval, Exit Gate PASS, completion, or delivery.
+
+- TypeScript typecheck: `PASS` — `npm run typecheck` completed with no TypeScript diagnostics.
+- TypeScript build: `PASS` — `npm run build` completed. SHA-256 values for generated `static/app.js` and `static/money.js` were unchanged before and after the build, confirming the candidate outputs correspond to the current TypeScript source.
+- Frontend tests: `PASS` — `npm run test:frontend`: `4 passed`, `0 failed`, `0 skipped`, `0 todo`; the command rebuilds before Node's native test runner.
+- PostgreSQL prerequisite: `PASS` — the local Compose `postgres` service was healthy on `127.0.0.1:55432`.
+- C06 focused suite: `PASS` — `.venv/bin/python -m pytest tests/test_c06_minimal_demo_ui.py -q`: `6 collected`, `6 passed` in `0.53s`; `0 failed`, `0 skipped`, `0 xfailed`, and no warning output.
+- C05 regression: `PASS` — `.venv/bin/python -m pytest tests/test_c05_qr_payment_initiation.py -q`: `48 collected`, `48 passed` in `0.25s`; `0 failed`, `0 skipped`, `0 xfailed`, and no warning output.
+- C04 regression: `PASS` — `.venv/bin/python -m pytest tests/test_c04_payment_safety.py -q`: `19 collected`, `19 passed` in `0.69s`; `0 failed`, `0 skipped`, `0 xfailed`, and no warning output.
+- C03 regression: `PASS` — `.venv/bin/python -m pytest tests/test_c03_conventional_ledger.py -q`: `3 collected`, `3 passed` in `0.15s`; `0 failed`, `0 skipped`, `0 xfailed`, and no warning output.
+- Full suite: `PASS` — `.venv/bin/python -m pytest -q`: `95 collected`, `95 passed` in `1.06s`; `0 failed`, `0 skipped`, `0 xfailed`, and no warning output. A subsequent collect-only command confirmed `95 tests collected`.
+- Static/package checks: `PASS` — `.venv/bin/python -m compileall -q src tests`, `.venv/bin/python -m pip check`, and `git diff --check` all exited `0`. `pip check` reported `No broken requirements found` and emitted a non-failing warning that its user cache was not writable.
+- Bootstrap: `PASS` — approved local `upi_payment_test` reset produced `C001 = 100000` öre, `M001 = 0` öre, and zero payment, transaction, and idempotency rows. The focused suite also proved rejection of a remote host and a non-demo database name.
+- API/runtime smoke: `PASS` — a temporary local Uvicorn process served `GET /`, both balance routes, empty `GET /transactions`, and `GET /merchants/M001/qr` as `image/png` (416 bytes). A `POST /payments` for `10000` öre returned `SUCCESS`; identical replay returned the same transaction; balances were `90000` / `10000` öre and history contained exactly one `ConventionalLedger` transaction.
+- Browser smoke: `PASS` — an existing browser mechanism opened the local FastAPI UI after bootstrap and visibly confirmed C001 at `1000.00 SEK`, M001 at `0.00 SEK`, merchant QR, disabled `Blockchain — available in C07`, `100.00` SEK input, UI-submitted `SUCCESS`, transaction ID, `Local API request time`, `900.00` / `100.00` SEK balances, and one ConventionalLedger history row.
+- Protected-card review: `PASS` — C02 `UNCHANGED`; C03/C04/C05 `TOUCHED BUT SEMANTICS PRESERVED`. C06 adds read/presentation adapters and consumes C05 QR generation, while payment fingerprinting, idempotency/replay/conflict behavior, atomic ledger transfer, C05 payload/parser semantics, and existing C04 `POST /payments` behavior remain unchanged. The focused and regression results above support this conclusion.
+- Acceptance-contract coverage: all 18 planned contract items have implementation and executed verification evidence. Conventional is functional; Blockchain remains disabled/unimplemented C07 work; the UI contains no canonical-fingerprint, replay/conflict-decision, ledger-correctness, web3, wallet, or private-key logic.
+
+Phase 1 Verification: `PASS`.
+
+READY_FOR_INDEPENDENT_AUDIT: `YES`.
+
+## Independent Audit Failure and Bounded Remediation — 2026-09-21
+
+The independent C06 audit returned `FAIL`. It found two confirmed issues; the original audit result remains part of the C06 record and is not superseded by the remediation evidence below.
+
+### C06-A01 — CRITICAL — RESOLVED
+
+- Root cause: `_require_local_demo_target()` accepted a permitted `host` without validating the separately parsed libpq `hostaddr`. A local-looking host could therefore mask a remote numeric `hostaddr` before the explicit bootstrap performed destructive truncation.
+- Remediation: added an explicit approved-loopback `hostaddr` allowlist (`127.0.0.1`, `::1`). Any supplied non-loopback `hostaddr` is rejected while the existing permitted host and `upi_payment_test` database checks remain required. The guard does not use DNS resolution.
+- Regression proof: focused C06 guard tests directly exercised the guard without opening remote connections. They reject `host=localhost hostaddr=203.0.113.10`, `hostaddr=203.0.113.10`, an ordinary remote hostname, and a non-demo database; they accept existing `host=localhost`, loopback `hostaddr=127.0.0.1`, and loopback `hostaddr=::1` forms.
+
+### C06-A02 — MAJOR — RESOLVED
+
+- Root cause: the successful `POST /payments` response and the secondary balance/history refresh shared one error boundary. A refresh failure could replace a confirmed successful payment presentation with an error.
+- Remediation: the payment result is now rendered as authoritative immediately after the successful response. Balance/history refresh runs in a nested secondary error boundary; a refresh failure preserves `SUCCESS`, the transaction ID, and a clear warning: `Payment succeeded, but balance/history refresh failed. Do not retry the payment.` No payment retry or replacement request is generated.
+- Regression proof: dependency-free native Node UI tests execute the compiled UI with a controlled DOM/fetch runtime. They prove: (1) successful payment plus successful refresh retains `SUCCESS` and updates balances/history; (2) successful payment plus refresh failure retains `SUCCESS` and transaction ID, shows the warning, and sends exactly one payment POST; and (3) a failed payment POST remains an error presentation.
+
+### C06-A03 — CRITICAL — RESOLVED
+
+The subsequent independent re-audit returned `FAIL` after confirming C06-A01/A02. It found that `service=<name> dbname=upi_payment_test` could pass the prior parser-based guard while libpq resolved the service profile later to an unvalidated target.
+
+- Safety invariant: the bootstrap must never permit an explicit, implicit, or service-resolved connection target to bypass the approved local `upi_payment_test` policy.
+- Remediation: non-empty explicit `service` input is rejected. The bootstrap derives one explicit approved `host` from the validated `host`, validated loopback `hostaddr`, or the approved `localhost` fallback; it removes input `service` and `hostaddr` before constructing the final connection string. During the destructive bootstrap operation, `PGHOST`, `PGHOSTADDR`, `PGSERVICE`, and `PGSERVICEFILE` are temporarily removed and restored afterward, preventing libpq environment/service defaults from changing the explicit target. No DNS resolution is used as a security decision.
+- Service regression proof: direct guard tests reject both `service=myservice dbname=upi_payment_test` and the same input with `host=localhost`. A mocked bootstrap test sets remote-looking `PGHOST`, `PGHOSTADDR`, `PGSERVICE`, and `PGSERVICEFILE`, then proves all three downstream bootstrap connections receive only `dbname=upi_payment_test` and explicit `host=localhost`, with no `service` or `hostaddr` parameter. The test also proves the environment is restored afterward. A separate temporary local-only runtime probe configured an unusable service profile (`localhost:1`) and still completed bootstrap through its explicitly supplied `127.0.0.1:55432` target; no remote connection was attempted.
+- Host/hostaddr regression proof: remote `hostaddr`, host-plus-remote-`hostaddr`, remote hostname, and non-demo database are rejected; `localhost`, `127.0.0.1`, loopback `hostaddr` values, and existing Docker `host=postgres` remain accepted.
+
+### Remediation verification results
+
+- TypeScript typecheck: `PASS` — `npm run typecheck`.
+- TypeScript build: `PASS` — `npm run build`; generated `static/app.js` changed only through the TypeScript build for C06-A02.
+- Frontend tests: `PASS` — `npm run test:frontend`: `7 passed`, `0 failed`, `0 skipped`, `0 todo` in `44.101208ms`.
+- C06 focused suite: `PASS` — `.venv/bin/python -m pytest tests/test_c06_minimal_demo_ui.py -q`: `17 passed` in `0.83s`, including A01/A03 target-selection and environment-fallback regressions.
+- C05 regression: `PASS` — `48 passed` in `0.28s`.
+- C04 regression: `PASS` — `19 passed` in `0.69s`.
+- C03 regression: `PASS` — `3 passed` in `0.16s`.
+- Full pytest suite: `PASS` — `106 passed` in `1.42s`.
+- Static validation: `PASS` — `.venv/bin/python -m compileall -q src tests`, `.venv/bin/python -m pip check` (`No broken requirements found`), and `git diff --check` all exited successfully.
+- Protected-card review: `PASS` — C02 domain, C03 ledger, C04 fingerprint/idempotency/replay/conflict/atomic transfer, and C05 QR payload/parser/generator semantics were not changed by this bounded remediation.
+
+## Final Independent Re-Audit Record
+
+Final independent re-audit: `PASS`.
+
+- C06-A01: `RESOLVED`
+- C06-A02: `RESOLVED`
+- C06-A03: `RESOLVED`
+- New findings: `NONE`
+- Open findings: `NONE`
+- Bootstrap safety invariant: `PASS`
+- Frontend tests: `7 passed`
+- C06 focused suite: `17 passed`
+- C05 regression: `48 passed`
+- C04 regression: `19 passed`
+- C03 regression: `3 passed`
+- Full suite: `106 passed`
+- TypeScript typecheck/build: `PASS`
+- Browser smoke: `PASS`
+- C02/C03/C04/C05 protection: `PASS`
+- C06 Exit Gate: `PASS`
+- READY_FOR_HUMAN_DELIVERY_APPROVAL: `YES`
+
+C06 was `IN_PROGRESS` pending explicit human delivery approval and controlled Git delivery at the time of this historical re-audit record.
 
 ## Exit Gate
 
@@ -1975,8 +2165,27 @@ C06 passes when:
 - the conventional payment flow works end-to-end through the UI
 - the UI structure supports multiple ledger implementations
 - blockchain execution is not required until C07
+- the locked C06 acceptance contract has passing executed evidence without changing C04/C05 semantics
 
 C07 owns actual `BlockchainLedger` integration. C09 remains interview packaging and presentation only.
+
+C06 Exit Gate: `PASS`.
+
+READY_FOR_HUMAN_DELIVERY_APPROVAL: `YES`.
+
+## Controlled Delivery Closure — 2026-09-21
+
+- Status: `COMPLETE`
+- Final Independent Re-Audit: `PASS`
+- C06-A01/A02/A03: `RESOLVED`
+- Findings: `NONE`
+- Exit Gate: `PASS`
+- Human Delivery Approval: `GRANTED`
+- Controlled Delivery: `COMPLETE`
+- Branch: `main`
+- Final validation: frontend `7 passed`; C06 `17 passed`; C05 `48 passed`; C04 `19 passed`; C03 `3 passed`; full pytest `106 passed`; TypeScript typecheck/build `PASS`; browser smoke `PASS`; compileall, pip check, and diff check `PASS`.
+- C07: `NOT_STARTED / NOT_AUTHORIZED`
+- The immutable delivery SHA is reported from Git after the controlled commit; no SHA is embedded in this pre-commit evidence record.
 
 ---
 

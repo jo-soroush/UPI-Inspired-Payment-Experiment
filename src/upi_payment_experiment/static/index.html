@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>UPI-Inspired Payment Prototype</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="eyebrow">Interview experiment</p>
+        <h1>UPI-Inspired Payment Prototype</h1>
+        <p>One payment path, presented through the conventional ledger.</p>
+      </header>
+
+      <section aria-labelledby="ledger-heading">
+        <h2 id="ledger-heading">Ledger</h2>
+        <label><input type="radio" name="ledger" checked /> Conventional</label>
+        <label class="unavailable">
+          <input type="radio" name="ledger" disabled />
+          Blockchain — available in C07
+        </label>
+      </section>
+
+      <section class="demo-grid" aria-label="Demo accounts">
+        <article>
+          <h2>Customer C001</h2>
+          <p class="balance" id="customer-balance">Loading…</p>
+        </article>
+        <article>
+          <h2>Merchant M001</h2>
+          <p class="balance" id="merchant-balance">Loading…</p>
+          <img id="merchant-qr" alt="Payment QR for merchant M001" />
+          <p class="caption">Merchant identity only; amount is entered below.</p>
+        </article>
+      </section>
+
+      <section aria-labelledby="payment-heading">
+        <h2 id="payment-heading">Pay merchant M001</h2>
+        <form id="payment-form">
+          <label for="amount">Amount (SEK)</label>
+          <input
+            id="amount"
+            name="amount"
+            inputmode="decimal"
+            value="100.00"
+            autocomplete="off"
+            required
+          />
+          <button id="pay-button" type="submit">Pay</button>
+        </form>
+        <dl class="result">
+          <div><dt>Status</dt><dd id="payment-status">Ready</dd></div>
+          <div><dt>Transaction ID</dt><dd id="transaction-id">—</dd></div>
+          <div><dt>Local API request time</dt><dd id="request-duration">—</dd></div>
+        </dl>
+      </section>
+
+      <section aria-labelledby="history-heading">
+        <h2 id="history-heading">Transaction history</h2>
+        <p id="history-empty">No transactions yet.</p>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th>Transaction</th><th>Payment</th><th>Status</th><th>Ledger</th></tr>
+            </thead>
+            <tbody id="transaction-history"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/static/app.js"></script>
+  </body>
+</html>
