@@ -12,20 +12,20 @@ It should stay short and current.
 ```text
 Project: UPI-Inspired Payment Experiment
 Overall Status: IN_PROGRESS
-Active Card: C07
-Last Completed Card: C06
-Next Allowed Card: C07
-Execution Authorization: GRANTED_FOR_C07_ONLY
+Active Card: NONE
+Last Completed Card: C07
+Next Allowed Card: C08
+Execution Authorization: NONE
 C02 Authorization: CLOSED/COMPLETED
 C03 Authorization: CLOSED/COMPLETED
 C04 Authorization: CLOSED/COMPLETED
 C05 Authorization: CLOSED/COMPLETED
 C06 Authorization: CLOSED/COMPLETED
-C07 Authorization: GRANTED
+C07 Authorization: CLOSED/COMPLETED
 C08 Authorization: NOT_GRANTED
 Current Branch: main
 Current Blocker: NONE
-Current Work: C07 Blockchain Ledger — final independent re-audit passed (A01-A09 CLOSED); Human Delivery Approval GRANTED; controlled Git delivery in progress
+Current Work: C07 Blockchain Ledger — delivery COMPLETE; C08 sequence-eligible only
 C06 Phase 1 Verification: PASS
 C06 Final Independent Re-Audit: PASS
 C06 Findings: NONE
@@ -37,7 +37,7 @@ C06 Ready for Human Delivery Approval: YES
 C06 Human Delivery Approval: GRANTED
 C06 Git Delivery: COMPLETE
 C06 Card Status: COMPLETE
-C07 Card Status: IN_PROGRESS
+C07 Card Status: COMPLETE
 C07 Phase 1 Verification: PASS
 C07 Independent Audit: FAIL (historical)
 C07 Final Independent Re-Audit: PASS (before C07-A07 discovery)
@@ -60,7 +60,8 @@ C07 New Findings: NONE
 C07 Exit Gate: PASS
 C07 Ready for Human Delivery Approval: YES
 C07 Human Delivery Approval: GRANTED
-C07 Git Delivery: NOT_PERFORMED
+C07 Git Delivery: COMPLETE
+C07 Delivery Commit: d22d48a9253a1cdca86e311620365915d6a04a55
 C05 Final Independent Re-Audit: PASS
 C05-A01: RESOLVED
 C05-A02: RESOLVED
@@ -89,7 +90,7 @@ Next Allowed Card indicates sequence eligibility only. Starting that Card still 
 | C04 | Payment Safety & Failure Handling | COMPLETE |
 | C05 | QR Payment Initiation | COMPLETE |
 | C06 | Minimal Demo UI | COMPLETE |
-| C07 | Blockchain Ledger | IN_PROGRESS |
+| C07 | Blockchain Ledger | COMPLETE |
 | C08 | Benchmark & Comparative Experiment | NOT_STARTED |
 | C09 | Interview Demo & Engineering Report | NOT_STARTED |
 
@@ -222,6 +223,8 @@ Record only meaningful baseline changes.
 | 2026-09-22 | C07-A08/A09 remediated | Payment-intent ledger capture/control lock prevents mixed UI context; C06 test-module DSN validation now fails closed before fixture database activity. | Final independent re-audit is required; C07 remains IN_PROGRESS, human delivery approval/Git delivery are pending, and C08 remains NOT_STARTED/NOT_GRANTED. |
 | 2026-09-22 | C07 Final Independent Re-Audit (Post A08/A09) passed | Independent re-execution of full validation confirmed C07-A01 through C07-A09 CLOSED, new findings NONE, and Exit Gate PASS | C07 remains IN_PROGRESS; Human Delivery Approval remains NOT_GRANTED; Git Delivery remains NOT_PERFORMED; C08 remains NOT_STARTED/NOT_GRANTED; Ready for Human Delivery Approval: YES. |
 | 2026-09-22 | C07 Human Delivery Approval granted | Explicit human authorization for controlled C07 Git delivery only | C07 Git delivery is being performed by this task; C08 remains NOT_STARTED/NOT_GRANTED; CLAUDE.md excluded from delivery scope. |
+
+| 2026-09-22 | C07 completed | Controlled delivery completed on `main` after final independent re-audit PASS and human approval | C07 status: COMPLETE; delivery commit: `d22d48a9253a1cdca86e311620365915d6a04a55`; C08 remains NOT_STARTED/NOT_GRANTED; no automatic advancement occurred |
 
 ---
 
