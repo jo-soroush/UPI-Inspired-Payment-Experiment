@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import os
 from pathlib import Path
 import struct
+from urllib.parse import urlsplit
 import zlib
 
 import httpx
@@ -15,6 +16,7 @@ from upi_payment_experiment.api import create_app
 from upi_payment_experiment.conventional_ledger import ConventionalLedger
 from upi_payment_experiment import demo_bootstrap
 from upi_payment_experiment.demo_bootstrap import (
+    IMPLICIT_TARGET_ENVIRONMENT,
     _require_local_demo_target,
     _validated_demo_dsn,
     bootstrap_demo,
@@ -24,9 +26,46 @@ from upi_payment_experiment.payment_service import PaymentService
 from upi_payment_experiment.qr import decode_merchant_qr
 
 
-TEST_DSN = os.environ.get(
-    "UPI_TEST_DATABASE_DSN",
-    "postgresql://upi@127.0.0.1:55432/upi_payment_test",
+_C06_TEST_DATABASE_NAME = "upi_payment_test"
+_C06_TEST_LOCAL_HOSTS = frozenset({"127.0.0.1", "::1", "localhost"})
+
+
+def _validated_c06_test_dsn(raw_dsn: str) -> str:
+    """Require one explicit loopback test target before this module uses PostgreSQL."""
+
+    if any(os.environ.get(name) for name in IMPLICIT_TARGET_ENVIRONMENT):
+        raise ValueError(
+            "C06 tests do not allow implicit libpq database target environment"
+        )
+    if not isinstance(raw_dsn, str) or not raw_dsn.strip():
+        raise ValueError("C06 test database DSN must be a non-empty PostgreSQL URI")
+
+    parsed = urlsplit(raw_dsn)
+    if parsed.scheme != "postgresql" or parsed.hostname not in _C06_TEST_LOCAL_HOSTS:
+        raise ValueError(
+            "C06 tests require an explicit postgresql loopback database host"
+        )
+    parameters = conninfo_to_dict(raw_dsn)
+    if (
+        parameters.get("host") not in _C06_TEST_LOCAL_HOSTS
+        or parameters.get("hostaddr") not in (None, "")
+    ):
+        raise ValueError(
+            "C06 tests are restricted to the explicit local upi_payment_test database"
+        )
+    validated_dsn = _validated_demo_dsn(raw_dsn)
+    if conninfo_to_dict(validated_dsn).get("dbname") != _C06_TEST_DATABASE_NAME:
+        raise ValueError(
+            "C06 tests are restricted to the explicit local upi_payment_test database"
+        )
+    return validated_dsn
+
+
+TEST_DSN = _validated_c06_test_dsn(
+    os.environ.get(
+        "UPI_TEST_DATABASE_DSN",
+        "postgresql://upi@127.0.0.1:55432/upi_payment_test",
+    )
 )
 PAYMENT_TIME = datetime(2026, 1, 4, 12, 0, tzinfo=timezone.utc)
 TRANSACTION_TIME = datetime(2026, 1, 4, 12, 0, 1, tzinfo=timezone.utc)
@@ -136,6 +175,68 @@ def test_demo_bootstrap_recreates_only_the_canonical_fixture() -> None:
         )
     assert accounts == [("C001", 100000), ("M001", 0)]
     assert counts == (0, 0, 0)
+
+
+def test_c06_test_dsn_guard_accepts_only_the_explicit_loopback_target() -> None:
+    parameters = conninfo_to_dict(
+        _validated_c06_test_dsn(
+            "postgresql://upi@127.0.0.1:55432/upi_payment_test"
+        )
+    )
+
+    assert parameters["host"] == "127.0.0.1"
+    assert parameters["dbname"] == "upi_payment_test"
+    assert parameters.get("hostaddr") in (None, "")
+    assert parameters.get("service") in (None, "")
+
+
+@pytest.mark.parametrize(
+    "dsn",
+    (
+        "postgresql://upi@example.com:55432/upi_payment_test",
+        "postgresql://upi@203.0.113.10:55432/upi_payment_test",
+        "postgresql://upi@localhost:55432/upi_payment_test?hostaddr=127.0.0.1",
+        "postgresql://upi@localhost:55432/upi_payment_test?service=remote",
+        "postgresql://upi@127.0.0.1:55432/other_database",
+        "postgresql:///upi_payment_test",
+    ),
+)
+def test_c06_test_dsn_guard_rejects_unsafe_targets_before_database_activity(
+    monkeypatch: pytest.MonkeyPatch, dsn: str
+) -> None:
+    connection_attempts = 0
+
+    def forbid_connection(*args: object, **kwargs: object) -> None:
+        nonlocal connection_attempts
+        connection_attempts += 1
+        raise AssertionError("test DSN validation must run before database activity")
+
+    monkeypatch.setattr(psycopg, "connect", forbid_connection)
+
+    with pytest.raises(ValueError):
+        _validated_c06_test_dsn(dsn)
+
+    assert connection_attempts == 0
+
+
+@pytest.mark.parametrize(
+    ("environment_name", "value"),
+    (
+        ("PGHOST", "203.0.113.10"),
+        ("PGHOSTADDR", "203.0.113.10"),
+        ("PGSERVICE", "remote-service"),
+        ("PGSERVICEFILE", "/tmp/remote-service.conf"),
+    ),
+)
+def test_c06_test_dsn_guard_rejects_implicit_target_environment(
+    monkeypatch: pytest.MonkeyPatch, environment_name: str, value: str
+) -> None:
+    monkeypatch.setenv(environment_name, value)
+
+    with pytest.raises(ValueError, match="implicit libpq"):
+        _validated_c06_test_dsn(
+            "postgresql://upi@127.0.0.1:55432/upi_payment_test"
+        )
 
 
 @pytest.mark.parametrize(
@@ -276,7 +377,7 @@ async def test_balance_history_qr_and_static_routes(
     assert decode_merchant_qr(_decode_grayscale_png(qr.content)) == "M001"
     assert root.status_code == 200
     assert "UPI-Inspired Payment Prototype" in root.text
-    assert "Blockchain — available in C07" in root.text
+    assert 'id="ledger-blockchain"' in root.text
     assert "Local API request time" in root.text
     assert script.status_code == 200
     assert "crypto.randomUUID" in script.text
@@ -344,13 +445,13 @@ def test_c06_frontend_keeps_payment_and_qr_authority_in_backend() -> None:
         root / "src/upi_payment_experiment/static/index.html"
     ).read_text(encoding="utf-8")
 
-    assert 'fetch("/payments"' in app_source
+    assert "/payments?${ledgerQuery(ledger)}" in app_source
     assert "request_fingerprint" not in app_source
     assert "canonical" not in app_source.lower()
     assert "generate_merchant_qr" not in app_source
-    assert "ledger:" not in app_source
+    assert "ledger: selectedLedger()" not in app_source
     assert 'id="merchant-qr"' in html
-    assert "disabled" in html
-    assert "C07" in html
+    assert 'id="ledger-conventional"' in html
+    assert 'id="ledger-blockchain"' in html
     for forbidden in ("web3", "solidity", "private_key", "wallet"):
         assert forbidden not in app_source.lower()

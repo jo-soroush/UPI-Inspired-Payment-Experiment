@@ -12,19 +12,20 @@ It should stay short and current.
 ```text
 Project: UPI-Inspired Payment Experiment
 Overall Status: IN_PROGRESS
-Active Card: NONE
+Active Card: C07
 Last Completed Card: C06
 Next Allowed Card: C07
-Execution Authorization: NONE
-C02 Authorization: NOT_GRANTED
-C03 Authorization: NOT_GRANTED
-C04 Authorization: NOT_GRANTED
+Execution Authorization: GRANTED_FOR_C07_ONLY
+C02 Authorization: CLOSED/COMPLETED
+C03 Authorization: CLOSED/COMPLETED
+C04 Authorization: CLOSED/COMPLETED
 C05 Authorization: CLOSED/COMPLETED
 C06 Authorization: CLOSED/COMPLETED
-C07 Authorization: NOT_GRANTED
+C07 Authorization: GRANTED
+C08 Authorization: NOT_GRANTED
 Current Branch: main
 Current Blocker: NONE
-Current Work: C06 delivered; project paused pending explicit C07 authorization
+Current Work: C07 Blockchain Ledger — final independent re-audit passed (A01-A09 CLOSED); Human Delivery Approval GRANTED; controlled Git delivery in progress
 C06 Phase 1 Verification: PASS
 C06 Final Independent Re-Audit: PASS
 C06 Findings: NONE
@@ -36,7 +37,30 @@ C06 Ready for Human Delivery Approval: YES
 C06 Human Delivery Approval: GRANTED
 C06 Git Delivery: COMPLETE
 C06 Card Status: COMPLETE
-C07 Card Status: NOT_STARTED
+C07 Card Status: IN_PROGRESS
+C07 Phase 1 Verification: PASS
+C07 Independent Audit: FAIL (historical)
+C07 Final Independent Re-Audit: PASS (before C07-A07 discovery)
+C07-A01: CLOSED
+C07-A02: CLOSED
+C07-A03: CLOSED
+C07-A04: CLOSED
+C07-A05: CLOSED
+C07-A06: CLOSED
+C07-A07 Independent Re-Audit: PASS
+C07-A07: CLOSED
+C07-A08 Remediation: PASS
+C07-A08: CLOSED
+C07-A09 Remediation: PASS
+C07-A09: CLOSED
+C07 Remediation: PASS
+C07 Second Remediation: PASS
+C07 Final Independent Re-Audit (Post A08/A09): PASS
+C07 New Findings: NONE
+C07 Exit Gate: PASS
+C07 Ready for Human Delivery Approval: YES
+C07 Human Delivery Approval: GRANTED
+C07 Git Delivery: NOT_PERFORMED
 C05 Final Independent Re-Audit: PASS
 C05-A01: RESOLVED
 C05-A02: RESOLVED
@@ -65,7 +89,7 @@ Next Allowed Card indicates sequence eligibility only. Starting that Card still 
 | C04 | Payment Safety & Failure Handling | COMPLETE |
 | C05 | QR Payment Initiation | COMPLETE |
 | C06 | Minimal Demo UI | COMPLETE |
-| C07 | Blockchain Ledger | NOT_STARTED |
+| C07 | Blockchain Ledger | IN_PROGRESS |
 | C08 | Benchmark & Comparative Experiment | NOT_STARTED |
 | C09 | Interview Demo & Engineering Report | NOT_STARTED |
 
@@ -187,6 +211,17 @@ Record only meaningful baseline changes.
 | 2026-09-21 | C06-A03 remediated | Bootstrap now uses an explicit validated local target and suppresses implicit libpq target environment during destructive operations | Independent re-audit is required; C06 remains IN_PROGRESS |
 | 2026-09-21 | C06 final independent re-audit passed | C06-A01, C06-A02, and C06-A03 independently verified resolved; no findings remained; Exit Gate passed | C06 remains IN_PROGRESS pending explicit human delivery approval and controlled Git delivery |
 | 2026-09-21 | C06 completed | Human delivery approval granted after final independent re-audit PASS and Exit Gate PASS; controlled delivery completed on `main` | C06 status: COMPLETE; C07 remains NOT_STARTED/NOT_GRANTED; immutable delivery SHA is reported by Git after commit |
+| 2026-09-21 | C07 Phase 1 authorized | Explicit human authorization granted for C07 implementation and deterministic verification only | C07 is IN_PROGRESS; C08 and Git delivery remain unauthorized |
+| 2026-09-21 | C07 Phase 1 implemented | Blockchain contract, adapter, durable recovery journal, transport selector, deterministic verification, real-Anvil/browser smoke, and self-audit passed | C07 remains IN_PROGRESS pending independent audit; C08, approval, and Git delivery remain unauthorized |
+| 2026-09-21 | C07 independent audit failed | Independent spec-based audit found C07-A01 terminal replay downgrade, C07-A02 unrestricted bootstrap targets, C07-A03 unsafe receipt classification, C07-A04 duplicate participant addresses, and C07-A05 stale ledger-switch presentation | C07 remains IN_PROGRESS; Exit Gate, human approval, and Git delivery remain pending |
+| 2026-09-21 | C07-A01-A05 remediated | Bounded fixes and deterministic regressions passed for all five findings, including fresh real-Anvil and browser-switch verification | Independent re-audit is required; C07 remains IN_PROGRESS and C08 remains unauthorized |
+| 2026-09-22 | C07 independent re-audit failed | A01/A03 remained open because stale resolver snapshots could overwrite terminal journal state; A06 found unrestricted runtime RPC composition. A02/A04/A05 closed. | C07 remains IN_PROGRESS; second bounded remediation required; C08, approval, and Git delivery remain unauthorized. |
+| 2026-09-22 | C07-A01/A03/A06 second remediation | PostgreSQL terminal-state compare-and-set, stale resolver races, and runtime local-Anvil identity/chain validation passed deterministic verification. | Independent re-audit is required; C07 remains IN_PROGRESS and C08 remains unauthorized. |
+| 2026-09-22 | C07-A07 remediated | Manual post-final-audit file review found that the C07 test harness used an unvalidated environment DSN for destructive PostgreSQL fixtures. Module-level fail-closed validation now permits only the explicit loopback `upi_payment_test` URI before any test database activity. | Historical remediation record; the subsequent independent A07 re-audit passed. C07 remained IN_PROGRESS; C08 remained NOT_STARTED/NOT_GRANTED. |
+| 2026-09-22 | C07-A07 independent re-audit passed | Independent controlled module-load probes confirmed unsafe C07 test DSNs reject before any PostgreSQL connection; no A07 technical finding remained. | C07 remained IN_PROGRESS; later manual review found A08/A09. |
+| 2026-09-22 | C07-A08/A09 remediated | Payment-intent ledger capture/control lock prevents mixed UI context; C06 test-module DSN validation now fails closed before fixture database activity. | Final independent re-audit is required; C07 remains IN_PROGRESS, human delivery approval/Git delivery are pending, and C08 remains NOT_STARTED/NOT_GRANTED. |
+| 2026-09-22 | C07 Final Independent Re-Audit (Post A08/A09) passed | Independent re-execution of full validation confirmed C07-A01 through C07-A09 CLOSED, new findings NONE, and Exit Gate PASS | C07 remains IN_PROGRESS; Human Delivery Approval remains NOT_GRANTED; Git Delivery remains NOT_PERFORMED; C08 remains NOT_STARTED/NOT_GRANTED; Ready for Human Delivery Approval: YES. |
+| 2026-09-22 | C07 Human Delivery Approval granted | Explicit human authorization for controlled C07 Git delivery only | C07 Git delivery is being performed by this task; C08 remains NOT_STARTED/NOT_GRANTED; CLAUDE.md excluded from delivery scope. |
 
 ---
 

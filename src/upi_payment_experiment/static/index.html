@@ -11,15 +11,18 @@
       <header>
         <p class="eyebrow">Interview experiment</p>
         <h1>UPI-Inspired Payment Prototype</h1>
-        <p>One payment path, presented through the conventional ledger.</p>
+        <p>One payment path, selectable across both experimental ledgers.</p>
       </header>
 
       <section aria-labelledby="ledger-heading">
         <h2 id="ledger-heading">Ledger</h2>
-        <label><input type="radio" name="ledger" checked /> Conventional</label>
-        <label class="unavailable">
-          <input type="radio" name="ledger" disabled />
-          Blockchain — available in C07
+        <label>
+          <input id="ledger-conventional" type="radio" name="ledger" value="conventional" checked />
+          Conventional
+        </label>
+        <label>
+          <input id="ledger-blockchain" type="radio" name="ledger" value="blockchain" />
+          Blockchain
         </label>
       </section>
 

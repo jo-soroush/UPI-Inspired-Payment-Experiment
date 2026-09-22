@@ -1,6 +1,7 @@
 import { formatOreAsSek, parseSekToOre } from "./money.js";
 const CUSTOMER_ID = "C001";
 const MERCHANT_ID = "M001";
+let paymentIntentActive = false;
 function element(id) {
     const found = document.getElementById(id);
     if (!(found instanceof HTMLElement)) {
@@ -25,16 +26,29 @@ async function readError(response) {
     }
     return `Request failed (${response.status})`;
 }
-async function loadBalance(ownerId, outputId) {
-    const response = await fetch(`/accounts/${encodeURIComponent(ownerId)}/balance`);
+function selectedLedger() {
+    return element("ledger-blockchain").checked
+        ? "blockchain"
+        : "conventional";
+}
+function ledgerQuery(ledger) {
+    return `ledger=${encodeURIComponent(ledger)}`;
+}
+function setLedgerControlsDisabled(disabled) {
+    for (const id of ["ledger-conventional", "ledger-blockchain"]) {
+        element(id).disabled = disabled;
+    }
+}
+async function loadBalance(ownerId, outputId, ledger) {
+    const response = await fetch(`/accounts/${encodeURIComponent(ownerId)}/balance?${ledgerQuery(ledger)}`);
     if (!response.ok) {
         throw new Error(await readError(response));
     }
     const balance = (await response.json());
     element(outputId).textContent = formatOreAsSek(balance.balance_ore);
 }
-async function loadHistory() {
-    const response = await fetch("/transactions");
+async function loadHistory(ledger) {
+    const response = await fetch(`/transactions?${ledgerQuery(ledger)}`);
     if (!response.ok) {
         throw new Error(await readError(response));
     }
@@ -57,20 +71,25 @@ async function loadHistory() {
     }
     element("history-empty").hidden = history.transactions.length !== 0;
 }
-async function refreshBackendState() {
+async function refreshBackendState(ledger) {
     await Promise.all([
-        loadBalance(CUSTOMER_ID, "customer-balance"),
-        loadBalance(MERCHANT_ID, "merchant-balance"),
-        loadHistory(),
+        loadBalance(CUSTOMER_ID, "customer-balance", ledger),
+        loadBalance(MERCHANT_ID, "merchant-balance", ledger),
+        loadHistory(ledger),
     ]);
 }
 async function submitPayment(event) {
     event.preventDefault();
+    if (paymentIntentActive) {
+        return;
+    }
+    const ledger = selectedLedger();
     const amountInput = element("amount");
     const status = element("payment-status");
     const transaction = element("transaction-id");
     const timing = element("request-duration");
     const submit = element("pay-button");
+    let keepDisabled = false;
     let amount;
     try {
         amount = parseSekToOre(amountInput.value);
@@ -88,13 +107,15 @@ async function submitPayment(event) {
         currency: "SEK",
         idempotency_key: crypto.randomUUID(),
     };
+    paymentIntentActive = true;
     submit.disabled = true;
+    setLedgerControlsDisabled(true);
     status.textContent = "Submitting…";
     status.dataset.state = "pending";
     transaction.textContent = "—";
     const started = performance.now();
     try {
-        const response = await fetch("/payments", {
+        const response = await fetch(`/payments?${ledgerQuery(ledger)}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(request),
@@ -105,16 +126,32 @@ async function submitPayment(event) {
         }
         const result = (await response.json());
         status.textContent = result.status;
-        status.dataset.state = result.status === "SUCCESS" ? "success" : "error";
+        status.dataset.state =
+            result.status === "SUCCESS"
+                ? "success"
+                : result.status === "FAILED"
+                    ? "error"
+                    : "pending";
+        keepDisabled = result.status === "PENDING" || result.status === "UNKNOWN";
         transaction.textContent = result.transaction_id ?? "—";
         try {
-            await refreshBackendState();
+            await refreshBackendState(ledger);
         }
         catch {
-            status.textContent =
-                `${result.status} — Payment succeeded, but balance/history refresh failed. ` +
-                    "Do not retry the payment.";
-            status.dataset.state = "success";
+            if (result.status === "SUCCESS") {
+                status.textContent =
+                    "SUCCESS — Payment succeeded, but balance/history refresh failed. " +
+                        "Do not retry the payment.";
+                status.dataset.state = "success";
+            }
+            else if (keepDisabled) {
+                status.textContent =
+                    `${result.status} — Outcome unresolved; do not submit another payment.`;
+                status.dataset.state = "pending";
+            }
+            else {
+                status.textContent = `${result.status} — Balance/history refresh failed.`;
+            }
         }
     }
     catch (error) {
@@ -123,7 +160,29 @@ async function submitPayment(event) {
         status.dataset.state = "error";
     }
     finally {
-        submit.disabled = false;
+        submit.disabled = keepDisabled;
+        paymentIntentActive = keepDisabled;
+        setLedgerControlsDisabled(keepDisabled);
+    }
+}
+async function changeLedger() {
+    if (paymentIntentActive) {
+        return;
+    }
+    const ledger = selectedLedger();
+    const status = element("payment-status");
+    status.textContent = "Loading selected ledger…";
+    status.dataset.state = "pending";
+    element("transaction-id").textContent = "—";
+    element("request-duration").textContent = "—";
+    try {
+        await refreshBackendState(ledger);
+        status.textContent = "Ready";
+        status.dataset.state = "ready";
+    }
+    catch (error) {
+        status.textContent = error instanceof Error ? error.message : "Ledger unavailable";
+        status.dataset.state = "error";
     }
 }
 async function start() {
@@ -131,8 +190,13 @@ async function start() {
     element("payment-form").addEventListener("submit", (event) => {
         void submitPayment(event);
     });
+    for (const id of ["ledger-conventional", "ledger-blockchain"]) {
+        element(id).addEventListener("change", () => {
+            void changeLedger();
+        });
+    }
     try {
-        await refreshBackendState();
+        await refreshBackendState(selectedLedger());
     }
     catch (error) {
         const status = element("payment-status");

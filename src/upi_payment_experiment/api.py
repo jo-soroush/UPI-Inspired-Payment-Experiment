@@ -1,8 +1,9 @@
 """FastAPI transport for the shared payment boundary and minimal C06 UI."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Literal
 
 from fastapi import FastAPI, HTTPException, Response
 from fastapi.responses import FileResponse
@@ -15,6 +16,7 @@ from .errors import (
     IdempotencyConflictError,
     InsufficientFundsError,
     InvalidPaymentError,
+    PaymentInfrastructureError,
     PaymentConflictError,
 )
 from .payment_service import PaymentService
@@ -62,10 +64,11 @@ class TransactionHistoryResponse(BaseModel):
 def create_app(
     service: PaymentService,
     *,
+    services: Mapping[str, PaymentService] | None = None,
     clock: Callable[[], datetime] | None = None,
     static_directory: str | Path | None = None,
 ) -> FastAPI:
-    """Create the same-origin API and minimal static UI around one service."""
+    """Create the same-origin API and UI around ledger-selected services."""
 
     request_clock = clock or (lambda: datetime.now(timezone.utc))
     static_root = (
@@ -74,9 +77,29 @@ def create_app(
         else Path(__file__).with_name("static")
     )
     app = FastAPI()
+    service_registry = {"conventional": service}
+    if services is not None:
+        service_registry.update(services)
+
+    def selected_service(
+        ledger: Literal["conventional", "blockchain"],
+    ) -> PaymentService:
+        selected = service_registry.get(ledger)
+        if selected is None:
+            raise HTTPException(
+                status_code=503,
+                detail={
+                    "code": "LEDGER_UNAVAILABLE",
+                    "message": f"ledger is not configured: {ledger}",
+                },
+            )
+        return selected
 
     @app.post("/payments", response_model=PaymentResponse)
-    def create_payment(request: PaymentRequest) -> PaymentResponse:
+    def create_payment(
+        request: PaymentRequest,
+        ledger: Literal["conventional", "blockchain"] = "conventional",
+    ) -> PaymentResponse:
         try:
             payment = Payment(
                 payment_id=request.payment_id,
@@ -94,7 +117,7 @@ def create_app(
                 detail={"code": "INVALID_PAYMENT_REQUEST", "message": str(error)},
             ) from error
         try:
-            result = service.execute_payment(payment)
+            result = selected_service(ledger).execute_payment(payment)
         except (IdempotencyConflictError, PaymentConflictError) as error:
             raise HTTPException(
                 status_code=409,
@@ -115,6 +138,11 @@ def create_app(
                 status_code=422,
                 detail={"code": error.code, "message": str(error)},
             ) from error
+        except PaymentInfrastructureError as error:
+            raise HTTPException(
+                status_code=503,
+                detail={"code": error.code, "message": str(error)},
+            ) from error
         return PaymentResponse(
             payment_id=result.payment_id,
             transaction_id=result.transaction_id,
@@ -125,12 +153,20 @@ def create_app(
         "/accounts/{owner_id}/balance",
         response_model=BalanceResponse,
     )
-    def get_balance(owner_id: str) -> BalanceResponse:
+    def get_balance(
+        owner_id: str,
+        ledger: Literal["conventional", "blockchain"] = "conventional",
+    ) -> BalanceResponse:
         try:
-            balance = service.get_balance(owner_id, "SEK")
+            balance = selected_service(ledger).get_balance(owner_id, "SEK")
         except AccountNotFoundError as error:
             raise HTTPException(
                 status_code=404,
+                detail={"code": error.code, "message": str(error)},
+            ) from error
+        except PaymentInfrastructureError as error:
+            raise HTTPException(
+                status_code=503,
                 detail={"code": error.code, "message": str(error)},
             ) from error
         return BalanceResponse(
@@ -140,7 +176,9 @@ def create_app(
         )
 
     @app.get("/transactions", response_model=TransactionHistoryResponse)
-    def get_transactions() -> TransactionHistoryResponse:
+    def get_transactions(
+        ledger: Literal["conventional", "blockchain"] = "conventional",
+    ) -> TransactionHistoryResponse:
         return TransactionHistoryResponse(
             transactions=[
                 TransactionResponse(
@@ -150,7 +188,7 @@ def create_app(
                     status=transaction.status,
                     timestamp=transaction.timestamp,
                 )
-                for transaction in service.list_transactions()
+                for transaction in selected_service(ledger).list_transactions()
             ]
         )
 

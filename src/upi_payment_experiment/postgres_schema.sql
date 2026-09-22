@@ -38,3 +38,45 @@ CREATE TABLE IF NOT EXISTS idempotency_records (
     request_fingerprint TEXT NOT NULL,
     payment_id TEXT NOT NULL REFERENCES payments(payment_id)
 );
+
+CREATE TABLE IF NOT EXISTS blockchain_operations (
+    ledger_type TEXT NOT NULL CHECK (ledger_type = 'blockchain'),
+    payment_id TEXT NOT NULL,
+    request_fingerprint TEXT NOT NULL,
+    original_idempotency_key TEXT NOT NULL,
+    payer_id TEXT NOT NULL,
+    merchant_id TEXT NOT NULL,
+    amount BIGINT NOT NULL CHECK (amount > 0),
+    currency TEXT NOT NULL CHECK (currency = 'SEK'),
+    transaction_hash TEXT NOT NULL,
+    sender_address TEXT NOT NULL,
+    nonce BIGINT NOT NULL CHECK (nonce >= 0),
+    signed_raw_transaction BYTEA NOT NULL,
+    status TEXT NOT NULL CHECK (
+        status IN ('PREPARED', 'SUBMITTED', 'SUCCESS', 'FAILED', 'UNKNOWN')
+    ),
+    prepared_at TIMESTAMPTZ NOT NULL,
+    submitted_at TIMESTAMPTZ,
+    confirmed_at TIMESTAMPTZ,
+    receipt_status INTEGER,
+    gas_used BIGINT,
+    PRIMARY KEY (ledger_type, payment_id),
+    UNIQUE (ledger_type, transaction_hash)
+);
+
+CREATE TABLE IF NOT EXISTS blockchain_idempotency_records (
+    ledger_type TEXT NOT NULL CHECK (ledger_type = 'blockchain'),
+    idempotency_key TEXT NOT NULL,
+    request_fingerprint TEXT NOT NULL,
+    payment_id TEXT NOT NULL,
+    PRIMARY KEY (ledger_type, idempotency_key),
+    FOREIGN KEY (ledger_type, payment_id)
+        REFERENCES blockchain_operations (ledger_type, payment_id)
+);
+
+CREATE INDEX IF NOT EXISTS blockchain_operations_history_idx
+    ON blockchain_operations (
+        ledger_type,
+        COALESCE(confirmed_at, submitted_at, prepared_at),
+        transaction_hash
+    );

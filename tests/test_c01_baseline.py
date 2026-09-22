@@ -22,6 +22,7 @@ def test_project_configuration_declares_expected_dependencies() -> None:
         "fastapi>=0.115,<1",
         "psycopg[binary]>=3,<4",
         "uvicorn>=0.30,<1",
+        "web3>=7.13,<8",
         "zxing-cpp>=3,<4",
     ]
     assert config["project"]["optional-dependencies"]["test"] == [

@@ -242,7 +242,7 @@ Anvil does not represent Ethereum mainnet latency, congestion, validator behavio
 
 **Status:** ADOPT
 
-Planned responsibilities:
+Implemented C07 responsibilities:
 
 ```text
 store simulated balances
@@ -314,9 +314,9 @@ React is not required by default. C06 should choose the smallest frontend struct
 
 The frontend is not the research question.
 
-### C06 Contract-Locked Runtime Boundary
+### Historical C06 Contract Lock (Pre-Implementation)
 
-The following is the planned C06 contract only. It does not authorize C06 implementation.
+The following contract was locked before C06 implementation. It remains the design basis for the delivered C06 UI; it is retained here as historical decision evidence and does not describe current authorization.
 
 **Frontend baseline:** Plain TypeScript plus HTML and CSS, compiled with `tsc`, with no framework selected by default. FastAPI serves the compiled UI and static assets on the same origin as the API. A separate frontend runtime server and CORS middleware are not required for the primary interview-demo path.
 
@@ -340,7 +340,7 @@ Examples:
 
 **Request identities:** The existing `POST /payments` request requires distinct `payment_id` and `idempotency_key` fields. The UI may create opaque values with `crypto.randomUUID()` for one new user payment intent, but must not compute the canonical fingerprint or decide replay/conflict outcomes. It must not automatically retry an ambiguous request. If a later C06 retry affordance is added, it must reuse the exact original request payload and identifiers so C04 remains authoritative.
 
-**Planned thin FastAPI UI surface:**
+**Implemented thin FastAPI UI surface:**
 
 ```text
 POST /payments
@@ -373,7 +373,9 @@ The QR route invokes the existing C05 generator and exposes a browser-displayabl
 
 **Demo bootstrap:** An explicit local-only demo bootstrap, outside browser-accessible HTTP routes, must initialize the schema and reset/load only the deterministic C001/M001 fixture state before the interview flow. It must operate only against the local demo database, be deliberately invoked for demo preparation, and leave C04 payment execution and rollback behavior unchanged. A browser-accessible reset endpoint is not part of C06.
 
-**Ledger selector and latency:** Conventional is visible, selected, and functional. Blockchain is visible but disabled/unavailable and labeled as C07 work; C06 does not send a ledger-selection field to `POST /payments`, simulate a result, create a receipt, or expose blockchain data. The UI may display a browser-observed request duration only when labeled `Local API request time` or `UI-observed request duration`; it is not ledger latency, benchmark latency, blockchain confirmation time, or production latency. C08 remains the canonical source for benchmark timing.
+**Historical C06 ledger state:** Before C07 implementation, Conventional was the only functional ledger and Blockchain was displayed as unavailable. C06 did not send a ledger selector to `POST /payments`, simulate a result, create a receipt, or expose blockchain data.
+
+**Current C07 presentation state:** The same minimal TypeScript UI sends `ledger=conventional|blockchain` only as FastAPI transport metadata. Each payment intent captures its selected ledger once; its payment request and post-payment balance/history refresh use that same ledger while both controls are disabled. The UI still does not implement payment correctness, receipt handling, or blockchain semantics. A browser-observed request duration remains labeled `Local API request time` or `UI-observed request duration`; it is not ledger latency, benchmark latency, blockchain confirmation time, or production latency. C08 remains the canonical source for benchmark timing.
 
 ---
 
@@ -405,17 +407,18 @@ The QR layer ends after parsing and returning `merchant_id`. The decoded value e
 
 ```text
 QR initiation
+→ merchant_id
 → FastAPI/application boundary
-→ PaymentService
-→ LedgerInterface
-→ ConventionalLedger
+→ selected PaymentService
+→ selected LedgerInterface
+→ ConventionalLedger or BlockchainLedger
 ```
 
-Unknown merchants are rejected by the existing C04 account-validation behavior. C05 does not implement a merchant database, payment engine, or ledger behavior.
+Ledger selection is transport/composition metadata carried alongside the payment request, exactly as decided for C07 (see §14, C07 Architecture Decision Lock); it is not encoded in, derived from, or read out of the QR payload, which remains the same merchant-only C05 contract regardless of which ledger the request is routed to. Unknown merchants are rejected by the existing C04 account-validation behavior. C05 does not implement a merchant database, payment engine, or ledger behavior.
 
 C05 reuses the delivered C04 payment-safety path and does not duplicate payment identity, idempotency, fingerprinting, replay, duplicate, conflict, balance, persistence, transaction, rollback, or error semantics.
 
-The planned minimal C05 dependency for real QR generation and internal/test decoding is `zxing-cpp`; installation belongs to authorized C05 implementation.
+Delivered C05 uses `zxing-cpp` for real QR generation and internal/test decoding.
 
 **Real camera scanning:** WATCH
 
@@ -576,7 +579,7 @@ One idempotency key identifies one logical request intent. The same key with the
 
 The delivered C04 implementation had one execution context, `conventional`. Its historical statement that `idempotency_key` is globally unique means globally unique within that sole ConventionalLedger execution namespace; C04 runtime semantics and storage are unchanged by this decision.
 
-For planned C07 work, `ConventionalLedger` and `BlockchainLedger` are alternative experimental ledger contexts, not simultaneous financial settlement rails. Their execution namespaces are `ledger_type=conventional` and `ledger_type=blockchain`. Within either namespace, the C04 rules remain unchanged: the same idempotency key and canonical request returns or reconciles the original result without a second transfer; the same key with a different fingerprint raises `IdempotencyConflictError`; conflicting reuse of a payment ID raises `PaymentConflictError`; and a processed payment ID cannot execute a second transfer.
+For implemented C07 work, `ConventionalLedger` and `BlockchainLedger` are alternative experimental ledger contexts, not simultaneous financial settlement rails. Their execution namespaces are `ledger_type=conventional` and `ledger_type=blockchain`. Within either namespace, the C04 rules remain unchanged: the same idempotency key and canonical request returns or reconciles the original result without a second transfer; the same key with a different fingerprint raises `IdempotencyConflictError`; conflicting reuse of a payment ID raises `PaymentConflictError`; and a processed payment ID cannot execute a second transfer.
 
 `payment_id` and `idempotency_key` are unique only as the pairs `(ledger_type, payment_id)` and `(ledger_type, idempotency_key)`. The same raw identifier may therefore exist once in each distinct namespace as two separate experimental executions. One namespace's journal or state must not mutate, satisfy, or reconcile the other namespace's identifiers. This is valid only because the contexts are alternative and independently reset for the experiment; it is not a production multi-rail settlement design. A future real multi-rail system would need a global coordinator, which is out of scope.
 
@@ -604,7 +607,7 @@ Each simulated Customer or Merchant maps deterministically one-to-one to a contr
 
 # 11. Atomicity and Failure Strategy
 
-The planned PostgreSQL baseline uses `READ COMMITTED`, `SELECT ... FOR UPDATE`, and deterministic locking of relevant account rows:
+The delivered C03 PostgreSQL baseline uses `READ COMMITTED`, `SELECT ... FOR UPDATE`, and deterministic locking of relevant account rows:
 
 ```text
 BEGIN
@@ -618,7 +621,7 @@ COMMIT
 
 Failure causes `ROLLBACK`. Controlled failure injection will verify rollback after a simulated debit and before completion; infrastructure will not be intentionally corrupted.
 
-The Solidity ledger will use controlled reverts for invalid conditions and processed `payment_id` values to reject replay. Anvil/EVM transaction atomicity is limited to contract state: a revert must leave balances and processed-payment state unchanged. A lost response is reconciled by receipt/status lookup; it is not treated as failure and must not trigger a blind second submission.
+The Solidity ledger uses controlled reverts for invalid conditions and processed `payment_id` values to reject replay. Anvil/EVM transaction atomicity is limited to contract state: a revert leaves balances and processed-payment state unchanged. A lost response is reconciled by receipt/status lookup; it is not treated as failure and does not trigger a blind second submission.
 
 # 12. Ambiguous Blockchain Status
 
@@ -660,7 +663,7 @@ FastAPI
 → selected LedgerInterface implementation
 ```
 
-The registry contains at least `conventional → PaymentService(ConventionalLedger)` and `blockchain → PaymentService(BlockchainLedger)`. C07 selection uses `ledger=conventional|blockchain` at the FastAPI transport boundary. Omitted selection remains backward-compatible conventional behavior. The selector may apply to payment and ledger-dependent demo reads; merchant QR identity remains ledger-independent. `Payment`, `PaymentRequest` canonical payload, request fingerprint, and `LedgerInterface` method signatures remain ledger-neutral and unchanged unless later implementation evidence proves an unavoidable narrow change.
+The implemented registry contains `conventional → PaymentService(ConventionalLedger)` and `blockchain → PaymentService(BlockchainLedger)`. C07 selection uses `ledger=conventional|blockchain` at the FastAPI transport boundary. Omitted selection remains backward-compatible conventional behavior. The selector applies to payment and ledger-dependent demo reads; merchant QR identity remains ledger-independent. `Payment`, `PaymentRequest` canonical payload, request fingerprint, and `LedgerInterface` method signatures remain ledger-neutral and unchanged. C07 is implemented, remediated, and has passed its final independent re-audit (`C07-A01` through `C07-A09`: `CLOSED`); it remains `IN_PROGRESS` pending human delivery approval and is not Git-delivered.
 
 ## PaymentLedger and Administrative Authority
 
@@ -674,4 +677,4 @@ Administrative fixture setup uses one owner. OpenZeppelin `Ownable` is the prefe
 
 Blockchain payment success means a successful Ethereum transaction receipt with successful receipt status. The transaction hash is the canonical blockchain transaction identifier exposed through ledger-neutral result and history representations. Raw Web3 objects remain inside `BlockchainLedger`.
 
-C07 may retain factual execution metadata—transaction hash, receipt status, gas used, submission timestamp, and confirmation timestamp—for C08. C07 does not aggregate those facts, run workloads, or draw benchmark conclusions.
+C07 retains factual execution metadata—transaction hash, receipt status, gas used, submission timestamp, and confirmation timestamp—for later C08 work. C07 does not aggregate those facts, run workloads, or draw benchmark conclusions.

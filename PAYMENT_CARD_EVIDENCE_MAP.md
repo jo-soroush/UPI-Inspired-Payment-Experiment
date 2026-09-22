@@ -2193,11 +2193,11 @@ READY_FOR_HUMAN_DELIVERY_APPROVAL: `YES`.
 
 ## Status
 
-`NOT_STARTED`
+`IN_PROGRESS`
 
-Authorization: `NOT_GRANTED`.
+Authorization: `GRANTED FOR C07 PHASE 1 ONLY`.
 
-Sequence eligibility: `YES` — C07 is the next allowed Card, but implementation remains prohibited until explicit human authorization is granted.
+Decision-lock delivery and final independent re-preflight: `PASS`. Authorized Phase 1 implementation, deterministic verification, and self-audit completed. The independent audit history below records an initial `FAIL` on C07-A01 through C07-A05, a first bounded remediation, a re-audit `FAIL` that reopened C07-A01/A03 and found C07-A06, a second bounded remediation, and manually discovered C07-A07 (test-database-target safety), C07-A08 (UI ledger-selection race), and C07-A09 (C06 test-database-target safety) findings with their remediations. The final independent C07 re-audit recorded at the end of this section confirms `C07-A01` through `C07-A09`: `CLOSED`, new findings `NONE`, and C07 Exit Gate `PASS`. C07 remains `IN_PROGRESS`: human delivery approval is `NOT_GRANTED`, Git delivery is `NOT_PERFORMED`, and C08 remains `NOT_STARTED / NOT_GRANTED`.
 
 ## Goal
 
@@ -2351,18 +2351,18 @@ Within one namespace, same key and canonical request returns or reconciles the o
 
 For planned C08 work, payer, merchant, amount, currency, workload, ordering, and reset conditions remain equivalent. Execution identifiers are deterministically scoped by ledger type, benchmark run, and payment index; raw identifiers need not match between contexts.
 
-| ID | Planned requirement / expected result | Planned verification result |
+| ID | Requirement / expected result | Executed verification result |
 | --- | --- | --- |
-| R1 | Same blockchain idempotency key and canonical request returns or reconciles the original result; no second submission. | `NOT YET EXECUTED` |
-| R2 | Same blockchain idempotency key with a different fingerprint raises `IdempotencyConflictError`. | `NOT YET EXECUTED` |
-| R3 | Conflicting blockchain `payment_id` reuse raises `PaymentConflictError`. | `NOT YET EXECUTED` |
-| R4 | A processed blockchain payment ID replay causes no second transfer. | `NOT YET EXECUTED` |
-| R5 | The same raw payment ID in distinct ledger namespaces is allowed as separate experimental executions. | `NOT YET EXECUTED` |
-| R6 | The same raw idempotency key in distinct ledger namespaces is allowed as separate experimental executions. | `NOT YET EXECUTED` |
-| R7 | C08 uses the same logical workload with deterministic ledger/run-scoped identifiers. | `NOT YET EXECUTED` |
-| R8 | An ambiguous blockchain response reconciles the original operation and does not create a new blockchain transaction. | `NOT YET EXECUTED` |
-| R9 | Conventional behavior remains the delivered C04 behavior. | `NOT YET EXECUTED` |
-| R10 | One ledger namespace's journal or state cannot mutate or satisfy the other namespace. | `NOT YET EXECUTED` |
+| R1 | Same blockchain idempotency key and canonical request returns or reconciles the original result; no second submission. | `PASS AFTER C07-A01 REMEDIATION` — terminal SUCCESS/FAILED replay returns the durable result without a provider query or second broadcast; genuinely unresolved operations retain the original reconciliation path. |
+| R2 | Same blockchain idempotency key with a different fingerprint raises `IdempotencyConflictError`. | `PASS` — journal conflict test raises the ledger-neutral exception before broadcast. |
+| R3 | Conflicting blockchain `payment_id` reuse raises `PaymentConflictError`. | `PASS` — journal conflict test raises the ledger-neutral exception before broadcast. |
+| R4 | A processed blockchain payment ID replay causes no second transfer. | `PASS` — Solidity replay test and real-Anvil replay verify one exact debit/credit. |
+| R5 | The same raw payment ID in distinct ledger namespaces is allowed as separate experimental executions. | `PASS` — cross-ledger integration executes the same raw payment ID once in each isolated ledger. |
+| R6 | The same raw idempotency key in distinct ledger namespaces is allowed as separate experimental executions. | `PASS` — cross-ledger integration records independent conventional and blockchain bindings. |
+| R7 | C08 uses the same logical workload with deterministic ledger/run-scoped identifiers. | `PASS (STRUCTURAL C07 SCOPE)` — namespace schema and tests preserve ledger-scoped identity; no C08 runner or measurement was implemented. |
+| R8 | An ambiguous blockchain response reconciles the original operation and does not create a new blockchain transaction. | `PASS AFTER C07-A01/A03 REMEDIATION` — real submission plus injected receipt loss retains the hash and reconciles once; malformed/ambiguous receipt data becomes UNKNOWN without raw exceptions or false FAILED classification. |
+| R9 | Conventional behavior remains the delivered C04 behavior. | `PASS` — all 19 C04 tests and the browser conventional path pass unchanged. |
+| R10 | One ledger namespace's journal or state cannot mutate or satisfy the other namespace. | `PASS AFTER C07-A02 REMEDIATION` — cross-ledger integration verifies independent balances/bindings, and the local-only bootstrap reset clears only blockchain journal tables while preserving conventional state. |
 
 ## Final Independent C07 Re-Preflight and Decision-Lock Delivery Record
 
@@ -2386,32 +2386,68 @@ C07 remains `NOT_STARTED`; C07 authorization remains `NOT_GRANTED`; implementati
 
 ## Actual implementation
 
-`NOT YET EXECUTED`
+Authorized Phase 1 implemented the locked path `UI → FastAPI ledger selection → shared PaymentService → existing LedgerInterface → BlockchainLedger → web3.py → local Anvil → PaymentLedger` without changing `Payment`, `PaymentRequest`, the canonical fingerprint, or the five `LedgerInterface` signatures.
+
+- `PaymentLedger.sol` uses pinned OpenZeppelin `Ownable` for owner-only participant registration and one-time fixture seeding. Ordinary payer-signed transactions enforce known participants, positive integer-öre amount, sufficient funds, authorized sender, processed-payment replay protection, exact debit/credit, atomic revert, and event evidence.
+- `BlockchainLedger` maps distinct C001/M001 identities to backend-only test signers, signs locally, persists exact signed raw transactions before broadcast, validates receipt structure/status before terminal classification, preserves durable terminal results during replay, reconstructs payment/history, and contains provider/Web3 objects and errors.
+- PostgreSQL stores operational coordination only under `(ledger_type, payment_id)` and `(ledger_type, idempotency_key)`, including fingerprint, hash, sender, nonce, signed raw transaction, lifecycle, timestamps, receipt status, and gas used. Blockchain balances remain contract-authoritative.
+- FastAPI and the existing TypeScript UI select `conventional|blockchain` as query metadata; omission defaults to conventional, payment JSON stays ledger-neutral, and QR remains unchanged.
+- The explicit fresh-chain bootstrap initializes schema, clears only blockchain operation-journal rows, deploys/registers/seeds a fresh local contract, and never embeds or prints private keys.
 
 ## Problems encountered
 
-`NOT YET EXECUTED`
+The first browser smoke against a freshly redeployed local chain retained journal rows from an earlier chain. The journal correctly reserved a nonce above its durable history, but that nonce was not executable on the fresh chain, leaving the UI unresolved. Root cause: the explicit fresh-chain bootstrap initialized schema but did not align operational coordination state with the deliberately replaced chain. The fix adds a scoped reset of only `blockchain_idempotency_records` and `blockchain_operations`; a deterministic integration test proves the reset and proves conventional tables are unchanged. The repeated real browser smoke then passed for both ledgers.
+
+Foundry emitted a non-product warning because its optional signature cache under the user home directory was not writable in the sandbox; compilation and all tests still exited zero. pip similarly disabled its user cache but reported no broken requirements.
+
+## Independent Audit Failure and Bounded Remediation — 2026-09-21
+
+The formal independent spec-based audit returned `FAIL`. It preserved the Phase 1 execution history but invalidated the earlier self-audit conclusion and the portions of R1, provider-error containment, bootstrap safety, and UI-switch evidence that the original tests did not actually prove.
+
+- `C07-A01` (`MAJOR`): replay of a durable `SUCCESS` or `FAILED` entered provider reconciliation, so a provider outage could overwrite the terminal journal state with `UNKNOWN`. The audit's real-Anvil probe observed `SUCCESS → UNKNOWN` while retaining the hash and already-applied balances. Remediation makes terminal journal states immutable replay sources: they return directly without receipt lookup, transaction lookup, or rebroadcast. Focused real-Anvil evidence verifies durable journal/payment/transaction/history `SUCCESS`, the same hash, unchanged `90000/10000` balances, zero replay provider queries, and one broadcast. A definite `FAILED` receipt is likewise durable on replay.
+- `C07-A02` (`MAJOR`): the fresh-chain bootstrap accepted unrestricted PostgreSQL DSNs and RPC URLs before executing a destructive journal reset. Remediation reuses the C06 validated local-demo database policy, additionally requires an explicit host, rejects `PGHOST`/`PGHOSTADDR`/`PGSERVICE`/`PGSERVICEFILE` target redirection, accepts only explicit loopback HTTP RPC URLs with a port, verifies the connected client is Anvil, and still truncates only `blockchain_idempotency_records` and `blockchain_operations`. Tests reject remote host, remote `hostaddr`, service indirection, missing/ambiguous host, implicit target environment, remote/non-loopback/malformed RPC, and verify conventional tables remain unchanged.
+- `C07-A03` (`MAJOR`): direct `int(receipt[...])` conversion could leak raw exceptions and classified every non-1 value as definite failure. Remediation accepts only a mapping with integer (not boolean) status exactly `0` or `1` and non-negative integer gas. Status `1` becomes `SUCCESS`; status `0` becomes `FAILED`; missing, malformed, wrong-type, unexpected integer, malformed-object, or provider-format failures produce the existing ledger-neutral `UNKNOWN` result while preserving the known transaction hash. Terminal states are checked before receipt interpretation and cannot be corrupted.
+- `C07-A04` (`MINOR`): two application identities could resolve to one Ethereum address. Adapter construction and bootstrap deployment now normalize/check participant addresses and reject duplicates before deployment or payment activity. The regression verifies `C001 == M001` fails deterministically and does not advance the Anvil block number.
+- `C07-A05` (`MINOR`): switching ledgers could display the previous ledger's result as if it belonged to the new selection. The existing UI now immediately replaces status with `Loading selected ledger…` and clears transaction ID and request timing before refreshing balances/history. The frontend regression performs Conventional payment → Blockchain switch/payment → Conventional switch and verifies both cleanup directions and the newly selected result.
+
+The five findings are `REMEDIATED_PENDING_INDEPENDENT_RE_AUDIT`; this record is remediation evidence, not an independent re-audit. Human delivery approval remains `NOT_GRANTED`, Git delivery remains `NOT_PERFORMED`, and C08 remains `NOT_STARTED / NOT_GRANTED`.
 
 ## Tests
 
-Must eventually cover:
+Original Phase 1 execution on 2026-09-21 (historical; later found insufficient for C07-A01-A05):
 
-```text
-successful transfer
-insufficient balance
-duplicate payment
-processed payment_id replay protection
-receipt status
-balance correctness
-event/transaction trace
-controlled revert behavior
-lost-response reconciliation
-no blind duplicate submission after ambiguous/lost response
-```
+- `forge fmt --check`, `forge build`, `forge test -vv`: `PASS`; 10 Solidity tests, 0 failures, including 256 fuzz runs for exact deltas/value conservation and deterministic revert/no-mutation, authorization, event, replay, balance, and owner-only checks.
+- `.venv/bin/pytest -q tests/test_c07_blockchain_ledger.py`: `PASS`; 13 tests using actual local Anvil and PostgreSQL, including canonical 100000/0 → 90000/10000 execution, receipt/event/hash mapping, conflicts, failure mapping, exact-raw recovery, nonce reservation, cross-ledger isolation, API selection, and scoped bootstrap reset.
+- Lost-response proof: an actually submitted Anvil transaction has its normal receipt response deliberately suppressed once; retry reconciles the retained original hash, the broadcast counter remains one, and balances move exactly once. A separate controlled pre-broadcast failure proves byte-for-byte/hash-identical rebroadcast.
+- C03/C04/C05/C06 regressions: `3/3`, `19/19`, `48/48`, and `17/17` passed.
+- `.venv/bin/pytest -q`: `PASS`; 119 tests, 0 failures.
+- `npm run typecheck`, `npm run build`, `npm run test:frontend`: `PASS`; 9 frontend tests, 0 failures.
+- `.venv/bin/python -m compileall -q src tests`, `.venv/bin/pip check`, and `git diff --check`: `PASS`; no broken requirements or whitespace errors.
+- Real local browser smoke after fresh conventional/bootstrap and fresh Anvil deployment: conventional and blockchain each visibly changed `1000.00/0.00 SEK` to `900.00/100.00 SEK` with `SUCCESS`; blockchain displayed its transaction hash/history, QR loaded through FastAPI, and captured browser warning/error logs were empty.
+
+Bounded remediation execution on 2026-09-21:
+
+- `/Users/jo.soroush/.foundry/bin/forge fmt --check && /Users/jo.soroush/.foundry/bin/forge build && /Users/jo.soroush/.foundry/bin/forge test -vv`: `PASS`; 10 Solidity tests, 0 failures, including 256 fuzz runs. The signature-cache warning remained non-failing.
+- `.venv/bin/python -m pytest tests/test_c07_blockchain_ledger.py -q`: `PASS`; 39 tests in 19.03s on final closure verification. Added evidence covers terminal SUCCESS/FAILED replay, strict receipt validation, local-only bootstrap target validation, duplicate-address rejection, preservation of conventional and unrelated tables, and the existing real-Anvil/lost-response paths.
+- `.venv/bin/python -m pytest -q tests/test_c07_blockchain_ledger.py::test_real_anvil_canonical_payment_and_ledger_interface tests/test_c07_blockchain_ledger.py::test_terminal_success_replay_is_provider_independent_and_immutable tests/test_c07_blockchain_ledger.py::test_lost_receipt_reconciles_original_hash_without_new_transaction`: `PASS`; 3 tests in 3.19s, separating canonical success, terminal-outage replay, and genuinely unresolved reconciliation.
+- C03/C04/C05/C06 focused regressions: `PASS`; `3/3` in 0.20s, `19/19` in 0.74s, `48/48` in 0.27s, and `17/17` in 0.73s.
+- `.venv/bin/python -m pytest -q`: `PASS`; 145 tests in 20.46s on final closure verification, 0 failures.
+- `npm run typecheck` and `npm run test:frontend` (which runs the build before tests): `PASS`; TypeScript typecheck/build succeeded and 10 frontend tests passed, including two-way stale-result cleanup.
+- `.venv/bin/python -m compileall -q src tests`, `.venv/bin/pip check`, and `git diff --check`: `PASS`; no broken requirements, compile errors, or whitespace errors.
+- Fresh explicit local bootstrap and browser smoke: `PASS`; conventional and blockchain each visibly changed `1000.00/0.00 SEK` to `900.00/100.00 SEK` with `SUCCESS`; blockchain displayed transaction hash `0x603b…124d`. The first switch visibly showed `Loading selected ledger…`, transaction `—`, and timing `—`; the reverse switch showed conventional `Ready`, transaction `—`, timing `—`, and the correct ConventionalLedger history. Browser warning/error logs were empty.
+- Security inspection: `PASS`; no test key, private-key field, Web3 client, Anvil RPC URL, or direct RPC port occurs in frontend or served static assets. Signer selection remains the fixed backend C001/M001 mapping; SQL executed by the bootstrap uses fixed table names and no interpolated target/input.
+- Final remediation closure verification on 2026-09-22: `PASS`. Forge formatting/build/tests remained `10/10` with 256 fuzz runs; C03/C04/C05/C06 remained `3/3`, `19/19`, `48/48`, and `17/17`; frontend typecheck/build/tests remained `10/10`; compileall, pip check, and `git diff --check` passed. This closure performed no source or test edits and did not perform an independent re-audit or Git delivery.
 
 ## Evidence artifacts
 
-`NOT YET EXECUTED`
+- Contract and deterministic Solidity evidence: `contracts/PaymentLedger.sol`, `contracts/test/PaymentLedger.t.sol`, `foundry.toml`.
+- Adapter/recovery evidence: `src/upi_payment_experiment/blockchain_ledger.py`, `src/upi_payment_experiment/blockchain_journal.py`, `src/upi_payment_experiment/blockchain_bootstrap.py`, and the journal schema in `postgres_schema.sql`.
+- Transport/UI evidence: `api.py`, `demo_app.py`, `frontend/app.ts`, compiled `static/app.js`, `static/index.html`, and frontend tests.
+- Real-Anvil/API/fault-injection/namespace evidence: `tests/test_c07_blockchain_ledger.py`.
+
+Known limitations: Anvil is a single-process local development chain, test keys are backend-only ephemeral fixtures, the journal and chain do not share ACID atomicity, unresolved provider outcomes require later retry/reconciliation, and the fresh-chain bootstrap intentionally clears operational journal state only when deliberately invoked. These results are not evidence for public Ethereum latency, cost, consensus finality, custody, production reliability, or C08 benchmark conclusions.
+
+Original Phase 1 self-audit: `PASS`, superseded by the formal independent audit `FAIL` on C07-A01-A05. The first bounded-remediation self-check was later superseded by the following independent re-audit: its terminal-replay checks covered only an already-observed terminal snapshot and did not prove that a stale nonterminal resolver could not overwrite a concurrently persisted terminal row. It also did not validate runtime `BlockchainLedger.from_environment()` against non-local RPC targets. Independent re-audit is still required after the second remediation record below.
 
 ## Exit Gate
 
@@ -2427,6 +2463,205 @@ C07 passes only when:
 - no blind duplicate submission occurs
 
 Production wallet behavior and public-chain behavior are not required.
+
+The formal independent audit set the C07 gate to `FAIL` for C07-A01-A05. Bounded remediation verification now self-assesses `PASS — READY_FOR_INDEPENDENT_RE_AUDIT`, but does not independently close the gate. C07 remains `IN_PROGRESS`; human delivery approval is `NOT_GRANTED`; Git delivery is `NOT_PERFORMED`; C08 remains `NOT_STARTED / NOT_GRANTED`.
+
+---
+
+## Independent Re-Audit Failure and Second Bounded Remediation — 2026-09-22
+
+The first post-remediation independent re-audit returned `FAIL`. It confirmed `C07-A02`, `C07-A04`, and `C07-A05` as closed, but kept `C07-A01` and `C07-A03` open and identified `C07-A06`.
+
+- `C07-A01` (`MAJOR`, reopened): `BlockchainOperationJournal.update_status()` could unconditionally write `UNKNOWN` from a stale `PREPARED` operation object after another resolver had already persisted `SUCCESS` or `FAILED`. The object-level terminal check in `BlockchainLedger` was insufficient because it did not protect the PostgreSQL row.
+- `C07-A03` (`MAJOR`, reopened): strict receipt parsing correctly controlled malformed evidence for a genuinely nonterminal operation, but its `UNKNOWN` path used the same unconditional journal write and could therefore corrupt a concurrently terminal row.
+- `C07-A06` (`MAJOR`, new): `BlockchainLedger.from_environment()` passed the configured RPC URL directly to `HTTPProvider`; a public URL could construct the runtime adapter without local-loopback, Anvil-client, or chain-ID validation.
+
+### Second remediation
+
+- Journal status updates now use a PostgreSQL conditional update that excludes durable `SUCCESS` and `FAILED`. If the update loses a race, the journal returns the current authoritative operation instead of overwriting it. This protects every existing `SUBMITTED`, `UNKNOWN`, `SUCCESS`, and `FAILED` write path because all status changes use `update_status()`.
+- Direct real-Anvil/PostgreSQL regressions retain a stale `PREPARED` snapshot, independently persist `SUCCESS` or `FAILED`, then exercise a provider-outage or malformed-receipt path. They prove status, hash, receipt facts, payment, transaction, history, and balances remain authoritative, with no stale-handler broadcast.
+- Runtime composition now reuses explicit loopback HTTP URL validation, establishes a connection, requires Anvil client metadata, and requires local chain ID `31337` before constructing `BlockchainLedger`. Public/remote/non-loopback/malformed/userinfo URLs, a reachable non-Anvil endpoint, and a reachable wrong-chain endpoint are rejected before signing or payment activity. A real local-Anvil environment composition test executes the canonical payment successfully.
+
+### Second-remediation verification
+
+- `forge fmt --check`, `forge build`, and `forge test`: `PASS`; 10 Solidity tests, including 256 fuzz runs.
+- `.venv/bin/python -m pytest tests/test_c07_blockchain_ledger.py -q`: `PASS`; 51 tests in 22.36s. The count increased by 12: stale terminal `SUCCESS`/`FAILED` PostgreSQL race tests, seven unsafe-runtime-URL rejections, reachable non-Anvil/wrong-chain rejection tests, and real local runtime composition/execution.
+- C03/C04/C05/C06 focused regressions: `PASS`; `3/3`, `19/19`, `48/48`, and `17/17`.
+- `.venv/bin/python -m pytest -q`: `PASS`; 157 tests in 23.01s.
+- `compileall`, `pip check`, TypeScript typecheck/build, and frontend tests: `PASS`; frontend `10/10`, including ledger-switch stale-context cleanup.
+- Scoped-bootstrap reset, duplicate-address rejection, and frontend ledger-switch regressions remain covered by the passing C07/C06/frontend suites; no source changes were made for A02/A04/A05.
+
+Second remediation self-audit: `PASS — READY_FOR_INDEPENDENT_RE_AUDIT`. This is remediation evidence only. It does not change the independent-audit result, C07 Exit Gate, C07 completion, human delivery approval, Git delivery, or C08 authorization.
+
+---
+
+## Final Independent C07 Re-Audit — 2026-09-22
+
+Final independent re-audit: `PASS`.
+
+- `C07-A01` through `C07-A06`: `CLOSED`.
+- Findings: `NONE`.
+- C07 Exit Gate: `PASS`.
+- C07 remained `IN_PROGRESS` pending human delivery approval and controlled Git delivery.
+- Human delivery approval: `NOT_GRANTED`.
+- Git delivery: `NOT_PERFORMED`.
+- C08: `NOT_STARTED / NOT_GRANTED`.
+
+This independent result is historical evidence. The following manually discovered C07-A07 test-harness safety finding reopens the need for a bounded independent re-audit; it does not erase the original audit failure, either remediation record, or this final re-audit result.
+
+---
+
+## C07-A07 — Test Database Target Safety Remediation — 2026-09-22
+
+### Finding and root cause
+
+Manual post-final-audit review found that `tests/test_c07_blockchain_ledger.py` obtained `UPI_TEST_DATABASE_DSN` directly and assigned it to `TEST_DSN` without a mandatory test-harness target check. That module uses `TEST_DSN` for `ConventionalLedger(...).initialize_schema()`, `psycopg.connect(...)`, `bootstrap_demo(...)`, `BlockchainLedger(...)`, `TRUNCATE`, an isolated `CREATE TABLE`, and the matching `DROP TABLE`. A mistakenly configured remote, service-resolved, socket/default, non-test, or otherwise ambiguous target could therefore have been mutated.
+
+### Bounded remediation
+
+The test module now follows one authoritative boundary at module initialization:
+
+```text
+raw UPI_TEST_DATABASE_DSN
+→ _validated_c07_test_dsn(raw value)
+→ validated TEST_DSN
+→ all C07 fixture and test database use
+```
+
+The guard reuses the established C06/C07 local-demo safety model while making the C07 test harness stricter: it requires a non-empty `postgresql` URI, an explicit loopback host (`127.0.0.1`, `::1`, or `localhost`), and database `upi_payment_test`; it rejects `hostaddr`, `service`, and every implicit libpq target override (`PGHOST`, `PGHOSTADDR`, `PGSERVICE`, `PGSERVICEFILE`). It returns a parsed validated conninfo only after every check passes. Unsafe input is rejected; it is never rewritten into a safe target.
+
+Because `TEST_DSN` is initialized before fixtures, `BlockchainLedger` construction, schema initialization, connections, or destructive SQL are reachable, the entire module is protected rather than relying on scattered per-test checks. No blockchain, payment, contract, architecture, interface, fingerprint, QR, or C08 behavior changed.
+
+### Direct fail-before-connect evidence
+
+A controlled module-load probe replaced `psycopg.connect` with a recorder and executed the module boundary without running tests. Every rejected case recorded zero connection attempts:
+
+- remote DSN `postgresql://upi@203.0.113.10:55432/upi_payment_test`: `REJECTED BEFORE DATABASE ACTIVITY`;
+- local wrong database: `REJECTED BEFORE DATABASE ACTIVITY`;
+- `hostaddr` bypass: `REJECTED BEFORE DATABASE ACTIVITY`;
+- `service` indirection: `REJECTED BEFORE DATABASE ACTIVITY`;
+- `PGHOST`, `PGHOSTADDR`, and `PGSERVICE` redirection: each `REJECTED BEFORE DATABASE ACTIVITY`;
+- canonical `postgresql://upi@127.0.0.1:55432/upi_payment_test`: `ACCEPTED WITHOUT DATABASE ACTIVITY`.
+
+The focused regressions also cover remote hostname, remote IP, hostaddr, service, wrong database, missing host, and all four implicit libpq target variables. They prove rejection requires no remote database access.
+
+### Executed verification
+
+- `.venv/bin/python -m pytest tests/test_c07_blockchain_ledger.py -q`: `PASS`; `62 passed` in 22.60s. This is `+11` tests from the 51-test pre-A07 baseline: one canonical-acceptance test, six unsafe-DSN cases, and four implicit-environment cases.
+- `.venv/bin/python -m pytest tests/test_c03_conventional_ledger.py -q`: `PASS`; `3 passed`.
+- `.venv/bin/python -m pytest tests/test_c04_payment_safety.py -q`: `PASS`; `19 passed`.
+- `.venv/bin/python -m pytest tests/test_c05_qr_payment_initiation.py -q`: `PASS`; `48 passed`.
+- `.venv/bin/python -m pytest tests/test_c06_minimal_demo_ui.py -q`: `PASS`; `17 passed`.
+- `.venv/bin/python -m pytest -q`: `PASS`; `168 passed` in 23.83s, also `+11` from the 157-test pre-A07 baseline.
+- `.venv/bin/python -m compileall -q src tests`: `PASS`.
+- `.venv/bin/python -m pip check`: `PASS` — no broken requirements (the pre-existing non-writable pip-cache warning was non-failing).
+- `npm run typecheck`, `npm run build`, and `npm run test:frontend`: `PASS`; frontend tests `10/10`.
+- `/Users/jo.soroush/.foundry/bin/forge fmt --check`, `build`, and `test`: `PASS`; Solidity tests `10/10`, including 256 fuzz runs. The existing non-failing signature-cache warning remained due sandbox permissions.
+- `git diff --check`: `PASS`.
+
+### Scope and self-audit
+
+- Every C07 database operation in the module uses the single validated `TEST_DSN`.
+- No destructive C07 database operation can execute before module-level validation.
+- Remote, wrong-database, hostaddr, service, implicit-environment, and no-host targets fail closed before connection activity.
+- `C07-A01` terminal-state immutability, `C07-A02` local-only bootstrap, `C07-A03` receipt classification, `C07-A04` duplicate-address rejection, `C07-A05` UI switch safety, and `C07-A06` local-Anvil runtime composition all remain covered by the passing C07, frontend, and Solidity evidence.
+- No secrets were introduced. No payment/blockchain production source changed. No C08 work occurred.
+
+`C07-A07 Remediation: PASS`. This is a bounded remediation self-audit, not the independent A07 re-audit. C07 remains `IN_PROGRESS`; human delivery approval is `NOT_GRANTED`; Git delivery is `NOT_PERFORMED`; C08 remains `NOT_STARTED / NOT_GRANTED`; readiness for the A07 independent re-audit is `YES`.
+
+---
+
+## Independent C07-A07 Re-Audit — 2026-09-22
+
+Independent C07-A07 re-audit: `PASS`.
+
+- C07 module-level `TEST_DSN` validation was confirmed to precede all PostgreSQL connections, schema initialization, ledger construction, bootstrap, and destructive SQL.
+- Controlled module-load probes rejected remote hostname/IP, wrong database, hostaddr, service, every implicit libpq target variable, and no-host targets with zero `psycopg.connect` calls.
+- The canonical loopback `upi_payment_test` URI was accepted.
+- `C07-A07`: `CLOSED`.
+- No open A07 technical finding remained after the independent re-audit.
+
+---
+
+## C07-A08/A09 Consolidated Remediation — 2026-09-22
+
+Manual frontend review after the A07 re-audit found `C07-A08`: a payment request could begin on one selected ledger while the UI selection changed before its result and refresh completed, allowing the presentation to combine result context from one ledger with reads from another. Manual C06 test-harness review found `C07-A09`: `tests/test_c06_minimal_demo_ui.py` assigned its raw `UPI_TEST_DATABASE_DSN` to `TEST_DSN` before using it in `ConventionalLedger`, `bootstrap_demo`, and direct `psycopg.connect` calls.
+
+### A08 remediation
+
+Each valid payment intent now captures the selected ledger once. Its `POST /payments` request and every associated balance/history refresh receive that captured ledger explicitly. Both ledger radios are disabled while the payment outcome and refresh are active, and the change handler ignores a forced change event during that interval. Controls are restored only for resolved outcomes where a new payment intent is permitted; `PENDING`/`UNKNOWN` retains the existing no-second-intent lock. The confirmed `SUCCESS` refresh-failure protection is unchanged.
+
+The deterministic frontend regression begins a Conventional payment, holds its fetch unresolved, verifies both controls are disabled, forces a Blockchain change event while the request remains in flight, then resolves the payment. It proves the POST, post-payment balances, and history all use `ledger=conventional`, the displayed transaction/history are Conventional, and controls are restored after the resolved success.
+
+### A09 remediation
+
+The C06 test module now has the same authoritative module-load boundary as the C07 harness: raw `UPI_TEST_DATABASE_DSN` is checked before `TEST_DSN` is assigned. It requires a `postgresql` URI with explicit loopback host and database `upi_payment_test`, rejects `hostaddr`, service indirection, remote targets, no-host targets, and `PGHOST`/`PGHOSTADDR`/`PGSERVICE`/`PGSERVICEFILE`. It then reuses the C06 canonical demo-DSN validator. Every C06 database path continues to use the resulting validated `TEST_DSN`.
+
+Focused C06 regressions cover canonical acceptance; remote hostname/IP; hostaddr; service; wrong database; no host; and all four implicit target variables. Their patched `psycopg.connect` recorder proves rejected inputs make zero connection attempts.
+
+A separate controlled fresh module-load probe independently confirmed remote, wrong-database, hostaddr, service, `PGHOST`, `PGHOSTADDR`, `PGSERVICE`, and `PGSERVICEFILE` cases each rejected with `connect_calls=0`; the canonical local URI loaded with `connect_calls=0`.
+
+### Executed verification
+
+- `npm run typecheck`: `PASS`.
+- `npm run test:frontend`: `PASS`; `11/11` frontend tests, up from 10 by the deterministic A08 in-flight race regression.
+- `.venv/bin/python -m pytest tests/test_c03_conventional_ledger.py -q`: `PASS`; `3/3`.
+- `.venv/bin/python -m pytest tests/test_c04_payment_safety.py -q`: `PASS`; `19/19`.
+- `.venv/bin/python -m pytest tests/test_c05_qr_payment_initiation.py -q`: `PASS`; `48/48`.
+- `.venv/bin/python -m pytest tests/test_c06_minimal_demo_ui.py -q`: `PASS`; `28/28`, up from 17 by 11 A09 acceptance/rejection and zero-connection tests.
+- `.venv/bin/python -m pytest tests/test_c07_blockchain_ledger.py -q`: `PASS`; `62/62`.
+- `.venv/bin/python -m pytest -q`: `PASS`; `179/179`, up from 168 by the 11 A09 tests.
+- `.venv/bin/python -m compileall -q src tests`: `PASS`.
+- `.venv/bin/python -m pip check`: `PASS` — no broken requirements; the existing non-writable cache warning was non-failing.
+- `/Users/jo.soroush/.foundry/bin/forge test`: `PASS`; `10/10` Solidity tests, including 256 fuzz runs. The existing sandbox signature-cache warning was non-failing.
+- `git diff --check`: `PASS`.
+
+`C07-A08` and `C07-A09` are `REMEDIATED_PENDING_INDEPENDENT_REAUDIT`. This is remediation evidence, not an independent re-audit. C07 remains `IN_PROGRESS`; human delivery approval remains `NOT_GRANTED`; Git delivery remains `NOT_PERFORMED`; C08 remains `NOT_STARTED / NOT_GRANTED`.
+
+---
+
+## Final Independent C07 Re-Audit (Post A08/A09) — 2026-09-22
+
+Final independent C07 re-audit: `PASS`.
+
+- `C07-A01` through `C07-A09`: `CLOSED`.
+- New findings: `NONE`.
+- C07 Exit Gate: `PASS`.
+- Ready for Human Delivery Approval: `YES`.
+
+This re-audit independently re-executed validation rather than relying on the A08/A09 remediation self-assessment above:
+
+- `npm run test:frontend`: `PASS`; `11/11`.
+- `npm run typecheck`: `PASS`.
+- `.venv/bin/python -m pytest tests/test_c03_conventional_ledger.py -q`: `PASS`; `3/3`.
+- `.venv/bin/python -m pytest tests/test_c04_payment_safety.py -q`: `PASS`; `19/19`.
+- `.venv/bin/python -m pytest tests/test_c05_qr_payment_initiation.py -q`: `PASS`; `48/48`.
+- `.venv/bin/python -m pytest tests/test_c06_minimal_demo_ui.py -q`: `PASS`; `28/28`.
+- `.venv/bin/python -m pytest tests/test_c07_blockchain_ledger.py -q`: `PASS`; `62/62`.
+- `.venv/bin/python -m pytest -q`: `PASS`; `179/179`.
+- `/Users/jo.soroush/.foundry/bin/forge test`: `PASS`; `10/10` Solidity tests, including 256 fuzz runs.
+- `.venv/bin/python -m compileall -q src tests`: `PASS`.
+- `.venv/bin/python -m pip check`: `PASS` — no broken requirements.
+- `git diff --check`: `PASS`.
+
+This independent re-audit made no source, test, or contract changes and performed no Git actions; it is execution-only verification of the already-remediated `C07-A01` through `C07-A09` findings.
+
+C07 remains `IN_PROGRESS` pending human delivery approval and controlled Git delivery. Human delivery approval remains `NOT_GRANTED`. Git delivery remains `NOT_PERFORMED`. C08 remains `NOT_STARTED / NOT_GRANTED`.
+
+---
+
+## Human Delivery Approval — 2026-09-22
+
+- Status: `IN_PROGRESS`
+- Final Independent C07 Re-Audit (Post A08/A09): `PASS`
+- C07-A01 through C07-A09: `CLOSED`
+- Findings: `NONE`
+- Exit Gate: `PASS`
+- Human Delivery Approval: `GRANTED`
+- Git Delivery: `NOT_PERFORMED` — controlled delivery has not yet been committed or pushed at the time of this record
+- C08: `NOT_STARTED / NOT_GRANTED`
+
+Approval covers controlled C07 Git delivery only. It does not authorize C08, C09, or any unrelated change. `CLAUDE.md` remains excluded from C07 delivery scope. The immutable delivery SHA is reported from Git after the controlled commit; no SHA is embedded in this pre-commit evidence record.
 
 ---
 

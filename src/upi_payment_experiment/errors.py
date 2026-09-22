@@ -35,3 +35,9 @@ class IdempotencyConflictError(PaymentError):
     """An idempotency key was reused for a different immutable request."""
 
     code = "IDEMPOTENCY_KEY_REUSED_WITH_DIFFERENT_REQUEST"
+
+
+class PaymentInfrastructureError(PaymentError):
+    """The selected ledger cannot currently complete a safe operation."""
+
+    code = "LEDGER_UNAVAILABLE"
