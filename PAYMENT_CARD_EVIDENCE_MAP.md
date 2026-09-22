@@ -2669,7 +2669,7 @@ Approval covers controlled C07 Git delivery only. It does not authorize C08, C09
 
 ## Status
 
-`NOT_STARTED`
+`COMPLETE — IMPLEMENTATION, EXECUTION, SELF-AUDIT, FINAL INDEPENDENT CLOSURE RE-AUDIT, HUMAN APPROVAL, AND CONTROLLED DELIVERY PASS`
 
 ## Goal
 
@@ -2833,19 +2833,232 @@ Do not:
 
 ## Actual benchmark results
 
-`NOT YET EXECUTED`
+### Actual implementation and decisions
+
+`src/upi_payment_experiment/benchmark.py` implements one runner for both
+ledgers through the existing FastAPI → `PaymentService` → `LedgerInterface`
+path. A transparent timing adapter measures only `execute_payment`; because the
+existing implementations return after PostgreSQL commit or local-Anvil receipt,
+the primary boundary retains each canonical completion definition. The same
+request is separately timed around an in-process ASGI request/response for the
+secondary API metric.
+
+The deterministic fixture contains `C001`–`C020` at `100000` öre and
+`M001`–`M005` at `0` öre. Each benchmark payment is `1000` öre. This constant
+amount was selected before measured execution because repeating the 100 SEK
+presentation payment 1000 times would exceed the canonical fixture's total
+customer balances; 10 SEK preserves the existing positive-integer payment
+semantics and makes the prescribed maximum workload feasible without reseeding
+inside a run. Both ledgers receive the identical payer, merchant, amount,
+currency, ordering, and workload sequence. Payment and idempotency identifiers
+are deterministically scoped by ledger, workload, run, and payment index.
+
+Before every measured conventional run, all payment, transaction,
+idempotency, blockchain-journal, and account fixture state is cleared and the
+exact 25-account dataset is restored. Before every measured blockchain run,
+the same PostgreSQL fixture/journal reset occurs and a fresh `PaymentLedger`
+contract is deployed, with all 25 participants registered and seeded. Thus the
+active on-chain balance and processed-payment state is new as well as the
+off-chain journal. All 25 initial balances and empty history are verified
+before timing. One three-payment warm-up per ledger/workload is discarded.
+Reset, deployment, seed, warm-up, reset verification, final-state checks, and
+replay checks are outside the measured interval.
+
+The actual matrix executed sequentially with no reduction:
+
+```text
+workloads: 10, 100, 500, 1000
+measured runs: 5 per workload per ledger
+measured runs total: 40
+measured payments: 8050 per ledger; 16100 total
+invalid/failed measured runs: 0
+payment failures: 0
+```
+
+Observed workload aggregates below are computed from raw valid transaction
+measurements. Latencies are milliseconds; throughput is payments/second.
+
+| Ledger | Workload | Ledger avg / median / p95 | API avg / median / p95 | Mean run throughput |
+|---|---:|---:|---:|---:|
+| Conventional | 10 | 7.841 / 5.680 / 16.385 | 8.809 / 6.683 / 18.545 | 126.048 |
+| Conventional | 100 | 5.976 / 5.704 / 7.413 | 7.125 / 6.880 / 9.047 | 139.877 |
+| Conventional | 500 | 6.095 / 5.846 / 7.659 | 7.401 / 7.214 / 9.197 | 134.406 |
+| Conventional | 1000 | 6.399 / 6.034 / 8.056 | 7.630 / 7.348 / 9.531 | 130.429 |
+| Blockchain | 10 | 92.436 / 100.255 / 108.451 | 93.591 / 101.355 / 109.874 | 10.228 |
+| Blockchain | 100 | 92.656 / 100.234 / 113.104 | 93.954 / 101.389 / 114.668 | 10.178 |
+| Blockchain | 500 | 94.683 / 101.987 / 113.146 | 95.969 / 103.186 / 114.727 | 9.957 |
+| Blockchain | 1000 | 97.084 / 102.964 / 112.550 | 98.358 / 104.239 / 114.034 | 9.725 |
+
+Blockchain submission/confirmation and successful gas remain separate:
+
+| Workload | Submission avg / median / p95 ms | Confirmation avg / median / p95 ms | Successful gas avg / median / p95 |
+|---:|---:|---:|---:|
+| 10 | 32.854 / 32.667 / 40.881 | 51.633 / 60.781 / 63.345 | 73559.72 / 73553 / 82115 |
+| 100 | 34.519 / 34.181 / 44.561 | 50.650 / 61.165 / 63.637 | 65864.072 / 65015 / 65015 |
+| 500 | 35.169 / 35.061 / 42.999 | 51.954 / 61.484 / 63.759 | 65180.331 / 65015 / 65015 |
+| 1000 | 34.966 / 35.241 / 41.169 | 54.464 / 61.784 / 63.605 | 65094.745 / 65015 / 65015 |
+
+No measured payment failed or reverted, so failed/reverted gas count is `0`
+and its statistics remain inapplicable rather than being mixed with successful
+gas. Every measured run passed final-balance, value-conservation,
+transaction/history-linkage, and exact-replay/no-second-transfer checks.
+
+Normalized differential comparison: `PASS` for all `20` paired workload/run
+contexts, with `0` mismatches. Transaction hashes/IDs, timing, gas, and
+receipt/event identity were excluded from equality; payment status, payer and
+merchant balance deltas, history linkage, replay outcome and balance stability,
+and absence of partial transfer were retained.
+
+### Execution environment
+
+```text
+Git baseline: main @ 57bad6527c8bab6907680642a51b20af44c36f06
+Host: Darwin 25.6.0 arm64
+Python: 3.13.12
+PostgreSQL: 16.15 at explicit loopback upi_payment_test target
+Anvil: 1.8.3, ephemeral loopback process, chain ID 31337
+Node.js: 24.19.0
+npm: 11.17.0
+```
+
+The runner accepts only the explicit local `upi_payment_test` PostgreSQL target,
+rejects libpq redirection, starts its own loopback Anvil process, and verifies
+the Anvil client identity and chain ID before use.
+
+### Verification and traceability
+
+- Focused C08: `16 passed`.
+- C03–C07 regression selection: `160 passed`.
+- Full Python suite: `195 passed`.
+- Frontend typecheck: `PASS`.
+- Frontend tests: `11 passed`.
+- Solidity tests: `10 passed`, including `256` fuzz runs for the value-conservation property.
+- Python compileall: `PASS`.
+- `pip check`: `PASS` (`No broken requirements found`).
+- `git diff --check`: `PASS`.
+
+The focused tests cover deterministic/reproducible sequence generation,
+ledger-scoped identifier uniqueness, logical equivalence, exact fixture setup,
+safe local target validation with zero connection on rejection, non-loopback RPC
+rejection before provider calls, real PostgreSQL reset, real fresh-contract Anvil
+reset, reset/timing separation, excluded warm-up, sequential execution, timing
+boundaries, evidence schemas and all three writers, invalid-run retention,
+separate gas populations, raw mismatch retention, differential mismatch
+detection, rejection of equal-invalid-run false positives, replay behavior,
+final balances, value conservation, and exclusion
+of implementation identity/timing/gas from normalization.
+
+### Independent audit history and final closure
+
+The initial independent audit was `BLOCKED` only because the auditor sandbox
+could not execute the required test commands. Its source, architecture,
+methodology, evidence-integrity, differential, reset, timing, security, and
+documentation inspection found no defect. The block was environmental and did
+not identify a C08 implementation or evidence finding.
+
+The required commands were subsequently executed in the real project
+environment. The final independent closure re-audit independently reproduced
+the missing executions:
+
+- focused C08: `16 passed`;
+- full pytest: `195 passed`;
+- Solidity: `10 passed`;
+- Solidity value-conservation fuzzing: `256 runs`;
+- `pip check`: `PASS`;
+- the previously established frontend tests, TypeScript typecheck, and Python
+  compileall verification remain `PASS`.
+
+Final independent closure re-audit: `PASS`. Findings: `NONE`. C08 Exit Gate:
+`PASS`. `READY_FOR_HUMAN_DELIVERY_APPROVAL: YES`. Human Delivery Approval:
+`NOT_GRANTED`. Git Delivery: `NOT_PERFORMED`. C08 remains `IN_PROGRESS` until
+approved delivery completes. C09 remains `NOT_STARTED`.
+
+Property/invariant verification uses exhaustive uniqueness and deterministic
+generation assertions for the maximum 1000-payment workload plus deterministic
+normalized-outcome and value-conservation checks. A generated Python property
+framework was not added because the fixed canonical sequence is fully
+enumerated. Mutation testing is `NOT_APPLICABLE`: no concrete incremental value
+was identified beyond the focused boundary, negative, real-service reset, and
+differential false-green tests.
+
+### Evidence artifacts
+
+```text
+src/upi_payment_experiment/benchmark.py
+tests/test_c08_benchmark.py
+evidence/benchmarks/conventional/benchmark_results.json
+evidence/benchmarks/conventional/benchmark_results.csv
+evidence/benchmarks/conventional/per_transaction_results.jsonl
+evidence/benchmarks/blockchain/benchmark_results.json
+evidence/benchmarks/blockchain/benchmark_results.csv
+evidence/benchmarks/blockchain/per_transaction_results.jsonl
+evidence/benchmarks/differential_results.json
+evidence/benchmarks/qualitative_comparison.md
+```
 
 ## Problems encountered
 
-`NOT YET EXECUTED`
+- The canonical 100 SEK presentation payment cannot be repeated 1000 times
+  against 20 customers holding 1000 SEK each without exhaustion. A fixed 10 SEK
+  benchmark payment was selected symmetrically before measurement; all existing
+  payment rules remain unchanged.
+- `forge` was not on the interactive shell `PATH`. The repository's installed
+  `/Users/jo.soroush/.foundry/bin/forge` was invoked explicitly; all 10 Solidity
+  tests passed. Foundry emitted a non-test warning because its global signature
+  cache is outside the writable workspace.
+- An exact C01 dependency-baseline assertion initially failed after `httpx`
+  moved from the test extra to declared runtime dependencies for the benchmark
+  entry point. The exact assertion was updated to the new explicit dependency
+  contract; the final full suite passed without weakening the check.
+- Self-audit found that two identically invalid ledger runs could have matching
+  normalized outcomes and leave the top-level differential result at `PASS`.
+  The final verdict now applies run validity after differential comparison, so
+  any invalid run forces `FAIL` and remains listed with its exclusion reason.
+- No workload was unstable or disproportionate. The full 1000-payment workload
+  completed for both ledgers, so no symmetric reduction was made.
 
 ## Lessons learned
 
-`NOT YET EXECUTED`
+- Correctness evidence must accompany throughput: all runs retained explicit
+  balance, linkage, replay, and conservation results.
+- A fresh contract deployment is the smallest reliable reset for both balances
+  and processed-payment identity; clearing only the PostgreSQL journal would be
+  an invalid blockchain reset.
+- Ledger-only and API timing can be captured on the same payment without
+  changing C03–C07 implementations by composing a transparent timing adapter.
+- Local PostgreSQL commit and local Anvil receipt are useful measured boundaries
+  but do not imply equivalent guarantees or authorize public-network claims.
+- C08 implementation, benchmark execution, self-audit, and final independent
+  closure re-audit are complete with findings `NONE` and Exit Gate `PASS`.
+  The Card remains `IN_PROGRESS` pending explicit human delivery approval and
+  controlled Git delivery; C09 remains `NOT_STARTED`.
 
 ## Exit Gate
 
 A reproducible evidence set exists for both ledgers, and all conclusions are traceable to either measured evidence or explicitly labeled qualitative analysis.
+
+C08 Exit Gate: `PASS`. Final independent closure re-audit: `PASS`. Findings:
+`NONE`. `READY_FOR_HUMAN_DELIVERY_APPROVAL: YES`. Human Delivery Approval:
+`NOT_GRANTED`. Git Delivery: `NOT_PERFORMED`. C08 remains `IN_PROGRESS`; C09
+remains `NOT_STARTED`.
+
+## Human Delivery Approval and Controlled Delivery — 2026-09-22
+
+- C08 Status: `COMPLETE`
+- Final Independent Closure Re-Audit: `PASS`
+- Findings: `NONE`
+- Exit Gate: `PASS`
+- Human Delivery Approval: `GRANTED`
+- Controlled Delivery: `COMPLETE`
+- Branch: `main`
+- Git Delivery: `COMPLETE`
+- C09: `NOT_STARTED / NOT_AUTHORIZED`
+
+The immutable delivery SHA is determined by Git and reported in the final
+delivery output. No commit SHA is embedded in this delivery record.
+
+Approval covers controlled C08 delivery only. It does not authorize C09 or any
+other work. No automatic Card advancement occurred.
 
 ---
 

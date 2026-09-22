@@ -1,0 +1,1173 @@
+{
+  "aggregates": [
+    {
+      "all_balances_correct": true,
+      "all_replays_correct": true,
+      "all_transaction_linkage_correct": true,
+      "api_end_to_end_latency_ms": {
+        "average": 8.80866164,
+        "median": 6.682812500000001,
+        "p95": 18.545333
+      },
+      "confirmation_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "invalid_run_count": 0,
+      "ledger_latency_ms": {
+        "average": 7.840784160000001,
+        "median": 5.6796454999999995,
+        "p95": 16.385417
+      },
+      "measured_run_count": 5,
+      "submission_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "success_count": 50,
+      "successful_gas_count": 0,
+      "successful_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "throughput_payments_per_second": {
+        "average": 126.04799296230492,
+        "median": 137.19091315986685,
+        "p95": 169.42033442489725
+      },
+      "valid_run_count": 5,
+      "workload_size": 10
+    },
+    {
+      "all_balances_correct": true,
+      "all_replays_correct": true,
+      "all_transaction_linkage_correct": true,
+      "api_end_to_end_latency_ms": {
+        "average": 7.124578248,
+        "median": 6.880020999999999,
+        "p95": 9.047208
+      },
+      "confirmation_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "invalid_run_count": 0,
+      "ledger_latency_ms": {
+        "average": 5.976206584,
+        "median": 5.703979,
+        "p95": 7.413375
+      },
+      "measured_run_count": 5,
+      "submission_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "success_count": 500,
+      "successful_gas_count": 0,
+      "successful_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "throughput_payments_per_second": {
+        "average": 139.87672820341734,
+        "median": 138.47582550244692,
+        "p95": 149.5148617271682
+      },
+      "valid_run_count": 5,
+      "workload_size": 100
+    },
+    {
+      "all_balances_correct": true,
+      "all_replays_correct": true,
+      "all_transaction_linkage_correct": true,
+      "api_end_to_end_latency_ms": {
+        "average": 7.400540174400001,
+        "median": 7.213813,
+        "p95": 9.196834
+      },
+      "confirmation_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "invalid_run_count": 0,
+      "ledger_latency_ms": {
+        "average": 6.0950786724,
+        "median": 5.845604,
+        "p95": 7.659334
+      },
+      "measured_run_count": 5,
+      "submission_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "success_count": 2500,
+      "successful_gas_count": 0,
+      "successful_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "throughput_payments_per_second": {
+        "average": 134.40580332271017,
+        "median": 134.5623857964827,
+        "p95": 137.31729560659792
+      },
+      "valid_run_count": 5,
+      "workload_size": 500
+    },
+    {
+      "all_balances_correct": true,
+      "all_replays_correct": true,
+      "all_transaction_linkage_correct": true,
+      "api_end_to_end_latency_ms": {
+        "average": 7.6302609912,
+        "median": 7.348375000000001,
+        "p95": 9.530709
+      },
+      "confirmation_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "invalid_run_count": 0,
+      "ledger_latency_ms": {
+        "average": 6.399314867,
+        "median": 6.0338335,
+        "p95": 8.055584
+      },
+      "measured_run_count": 5,
+      "submission_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "success_count": 5000,
+      "successful_gas_count": 0,
+      "successful_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "throughput_payments_per_second": {
+        "average": 130.42859439259843,
+        "median": 129.65341222154322,
+        "p95": 133.50477423679627
+      },
+      "valid_run_count": 5,
+      "workload_size": 1000
+    }
+  ],
+  "generated_at": "2026-09-22T19:21:44.759158+00:00",
+  "ledger_type": "conventional",
+  "methodology": {
+    "aggregation": "latencies and gas pooled across valid transaction records; throughput summarized across valid measured runs",
+    "api_measurement": "in-process ASGI request/response around the same payment",
+    "dataset": "C001-C020=100000 \u00f6re; M001-M005=0 \u00f6re",
+    "ledger_completion_boundary": "successful PostgreSQL COMMIT",
+    "payment_amount_ore": 1000,
+    "p95_method": "nearest-rank ceil(0.95*n)",
+    "reset_and_verification_excluded": true,
+    "sequential": true,
+    "warm_up_excluded": true,
+    "warm_up_payments_per_workload": 3
+  },
+  "runs": [
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 6.437908500000001,
+        "median": 5.757625,
+        "p95": 10.815542
+      },
+      "attempt_count": 10,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 5.8488416999999995,
+        "median": 5.2238125,
+        "p95": 9.863125
+      },
+      "ledger_type": "conventional",
+      "measured_duration_seconds": 0.064621459,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 1,
+      "submission_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "success_count": 10,
+      "successful_gas_count": 0,
+      "successful_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "throughput_payments_per_second": 154.74735722076468,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 10
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 5.8821207,
+        "median": 5.681292,
+        "p95": 7.913916
+      },
+      "attempt_count": 10,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 5.3089751,
+        "median": 5.161417,
+        "p95": 6.942625
+      },
+      "ledger_type": "conventional",
+      "measured_duration_seconds": 0.059024792,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 2,
+      "submission_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "success_count": 10,
+      "successful_gas_count": 0,
+      "successful_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "throughput_payments_per_second": 169.42033442489725,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 10
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 9.9076792,
+        "median": 9.136229,
+        "p95": 17.031833
+      },
+      "attempt_count": 10,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 8.7866708,
+        "median": 7.9925625,
+        "p95": 15.912292
+      },
+      "ledger_type": "conventional",
+      "measured_duration_seconds": 0.099502167,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 3,
+      "submission_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "success_count": 10,
+      "successful_gas_count": 0,
+      "successful_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "throughput_payments_per_second": 100.50032377686809,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 10
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 14.576654099999999,
+        "median": 8.099416999999999,
+        "p95": 42.370625
+      },
+      "attempt_count": 10,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 13.0644666,
+        "median": 6.9545005,
+        "p95": 38.706625
+      },
+      "ledger_type": "conventional",
+      "measured_duration_seconds": 0.146239375,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 4,
+      "submission_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "success_count": 10,
+      "successful_gas_count": 0,
+      "successful_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "throughput_payments_per_second": 68.38103622912776,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 10
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 7.2389456999999995,
+        "median": 6.682812500000001,
+        "p95": 10.1195
+      },
+      "attempt_count": 10,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 6.1949666,
+        "median": 5.6729579999999995,
+        "p95": 9.060333
+      },
+      "ledger_type": "conventional",
+      "measured_duration_seconds": 0.072891125,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 5,
+      "submission_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "success_count": 10,
+      "successful_gas_count": 0,
+      "successful_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "throughput_payments_per_second": 137.19091315986685,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 10
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 7.52983838,
+        "median": 7.282208,
+        "p95": 9.043209
+      },
+      "attempt_count": 100,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 6.06003707,
+        "median": 5.7979164999999995,
+        "p95": 7.146916
+      },
+      "ledger_type": "conventional",
+      "measured_duration_seconds": 0.75767,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 1,
+      "submission_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "success_count": 100,
+      "successful_gas_count": 0,
+      "successful_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "throughput_payments_per_second": 131.98358124249344,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 100
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 6.66046874,
+        "median": 6.6299165,
+        "p95": 8.621042
+      },
+      "attempt_count": 100,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 5.77400916,
+        "median": 5.5831455000000005,
+        "p95": 7.104
+      },
+      "ledger_type": "conventional",
+      "measured_duration_seconds": 0.668829833,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 2,
+      "submission_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "success_count": 100,
+      "successful_gas_count": 0,
+      "successful_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "throughput_payments_per_second": 149.5148617271682,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 100
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 7.18600538,
+        "median": 6.904396,
+        "p95": 9.320875
+      },
+      "attempt_count": 100,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 6.07780464,
+        "median": 5.825792,
+        "p95": 8.076291
+      },
+      "ledger_type": "conventional",
+      "measured_duration_seconds": 0.722147708,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 3,
+      "submission_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "success_count": 100,
+      "successful_gas_count": 0,
+      "successful_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "throughput_payments_per_second": 138.47582550244692,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 100
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 7.03702084,
+        "median": 6.736917,
+        "p95": 8.412334
+      },
+      "attempt_count": 100,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 5.85104625,
+        "median": 5.5481875,
+        "p95": 7.26
+      },
+      "ledger_type": "conventional",
+      "measured_duration_seconds": 0.70751575,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 4,
+      "submission_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "success_count": 100,
+      "successful_gas_count": 0,
+      "successful_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "throughput_payments_per_second": 141.3396097542705,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 100
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 7.2095579,
+        "median": 6.8107085000000005,
+        "p95": 9.44575
+      },
+      "attempt_count": 100,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 6.1181358,
+        "median": 5.826271,
+        "p95": 7.808
+      },
+      "ledger_type": "conventional",
+      "measured_duration_seconds": 0.724271542,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 5,
+      "submission_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "success_count": 100,
+      "successful_gas_count": 0,
+      "successful_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "throughput_payments_per_second": 138.06976279070759,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 100
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 7.3889516,
+        "median": 7.0479795,
+        "p95": 9.103709
+      },
+      "attempt_count": 500,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 6.016620916,
+        "median": 5.6315,
+        "p95": 7.408792
+      },
+      "ledger_type": "conventional",
+      "measured_duration_seconds": 3.715748625,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 1,
+      "submission_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "success_count": 500,
+      "successful_gas_count": 0,
+      "successful_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "throughput_payments_per_second": 134.5623857964827,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 500
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 7.458078204,
+        "median": 7.3344375,
+        "p95": 9.206834
+      },
+      "attempt_count": 500,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 6.1512560899999995,
+        "median": 5.945396000000001,
+        "p95": 7.625583
+      },
+      "ledger_type": "conventional",
+      "measured_duration_seconds": 3.749068334,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 2,
+      "submission_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "success_count": 500,
+      "successful_gas_count": 0,
+      "successful_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "throughput_payments_per_second": 133.36646746754124,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 500
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 7.362055566,
+        "median": 7.1207505,
+        "p95": 9.271583
+      },
+      "attempt_count": 500,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 6.047546983999999,
+        "median": 5.763042,
+        "p95": 7.781959
+      },
+      "ledger_type": "conventional",
+      "measured_duration_seconds": 3.701869667,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 3,
+      "submission_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "success_count": 500,
+      "successful_gas_count": 0,
+      "successful_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "throughput_payments_per_second": 135.06688375801212,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 500
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 7.243852748,
+        "median": 7.096583,
+        "p95": 9.128542
+      },
+      "attempt_count": 500,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 6.045500094,
+        "median": 5.7774375,
+        "p95": 7.521458
+      },
+      "ledger_type": "conventional",
+      "measured_duration_seconds": 3.641201917,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 4,
+      "submission_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "success_count": 500,
+      "successful_gas_count": 0,
+      "successful_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "throughput_payments_per_second": 137.31729560659792,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 500
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 7.5497627540000005,
+        "median": 7.496957999999999,
+        "p95": 9.171458
+      },
+      "attempt_count": 500,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 6.214469277999999,
+        "median": 6.040583,
+        "p95": 7.696292
+      },
+      "ledger_type": "conventional",
+      "measured_duration_seconds": 3.7960465,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 5,
+      "submission_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "success_count": 500,
+      "successful_gas_count": 0,
+      "successful_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "throughput_payments_per_second": 131.71598398491693,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 500
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 7.451691877,
+        "median": 7.224875,
+        "p95": 9.126916
+      },
+      "attempt_count": 1000,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 6.219861893999999,
+        "median": 5.881125,
+        "p95": 7.77125
+      },
+      "ledger_type": "conventional",
+      "measured_duration_seconds": 7.490368833,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 1,
+      "submission_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "success_count": 1000,
+      "successful_gas_count": 0,
+      "successful_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "throughput_payments_per_second": 133.50477423679627,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 1000
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 7.669588762,
+        "median": 7.498979,
+        "p95": 9.52125
+      },
+      "attempt_count": 1000,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 6.291458327,
+        "median": 6.0417285,
+        "p95": 8.019709
+      },
+      "ledger_type": "conventional",
+      "measured_duration_seconds": 7.712870667,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 2,
+      "submission_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "success_count": 1000,
+      "successful_gas_count": 0,
+      "successful_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "throughput_payments_per_second": 129.65341222154322,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 1000
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 7.7642127190000005,
+        "median": 7.5082085,
+        "p95": 9.8355
+      },
+      "attempt_count": 1000,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 6.3487337450000005,
+        "median": 6.037395500000001,
+        "p95": 8.047
+      },
+      "ledger_type": "conventional",
+      "measured_duration_seconds": 7.807804333,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 3,
+      "submission_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "success_count": 1000,
+      "successful_gas_count": 0,
+      "successful_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "throughput_payments_per_second": 128.07698007664712,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 1000
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 7.7407072779999995,
+        "median": 7.333354,
+        "p95": 9.948333
+      },
+      "attempt_count": 1000,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 6.755434268,
+        "median": 6.2383955,
+        "p95": 8.880083
+      },
+      "ledger_type": "conventional",
+      "measured_duration_seconds": 7.772630916,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 4,
+      "submission_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "success_count": 1000,
+      "successful_gas_count": 0,
+      "successful_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "throughput_payments_per_second": 128.65656568633602,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 1000
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 7.5251043200000005,
+        "median": 7.1704585,
+        "p95": 9.15475
+      },
+      "attempt_count": 1000,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 6.381086101,
+        "median": 5.965042,
+        "p95": 7.745917
+      },
+      "ledger_type": "conventional",
+      "measured_duration_seconds": 7.561365791,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 5,
+      "submission_latency_ms": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "success_count": 1000,
+      "successful_gas_count": 0,
+      "successful_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "throughput_payments_per_second": 132.25123974166956,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 1000
+    }
+  ],
+  "schema_version": 1
+}

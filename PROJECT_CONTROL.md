@@ -13,8 +13,8 @@ It should stay short and current.
 Project: UPI-Inspired Payment Experiment
 Overall Status: IN_PROGRESS
 Active Card: NONE
-Last Completed Card: C07
-Next Allowed Card: C08
+Last Completed Card: C08
+Next Allowed Card: C09
 Execution Authorization: NONE
 C02 Authorization: CLOSED/COMPLETED
 C03 Authorization: CLOSED/COMPLETED
@@ -22,10 +22,11 @@ C04 Authorization: CLOSED/COMPLETED
 C05 Authorization: CLOSED/COMPLETED
 C06 Authorization: CLOSED/COMPLETED
 C07 Authorization: CLOSED/COMPLETED
-C08 Authorization: NOT_GRANTED
+C08 Authorization: CLOSED/COMPLETED
+C09 Authorization: NOT_GRANTED
 Current Branch: main
 Current Blocker: NONE
-Current Work: C07 Blockchain Ledger — delivery COMPLETE; C08 sequence-eligible only
+Current Work: C08 delivery COMPLETE; C09 remains NOT_STARTED pending explicit authorization
 C06 Phase 1 Verification: PASS
 C06 Final Independent Re-Audit: PASS
 C06 Findings: NONE
@@ -62,6 +63,18 @@ C07 Ready for Human Delivery Approval: YES
 C07 Human Delivery Approval: GRANTED
 C07 Git Delivery: COMPLETE
 C07 Delivery Commit: d22d48a9253a1cdca86e311620365915d6a04a55
+C08 Card Status: COMPLETE
+C08 Implementation Verification: PASS
+C08 Benchmark Execution: PASS
+C08 Differential Comparison: PASS
+C08 Self-Audit: PASS
+C08 Independent Audit: PASS
+C08 Final Closure Re-Audit: PASS
+C08 Findings: NONE
+C08 Exit Gate: PASS
+C08 Ready for Human Delivery Approval: YES
+C08 Human Delivery Approval: GRANTED
+C08 Git Delivery: COMPLETE
 C05 Final Independent Re-Audit: PASS
 C05-A01: RESOLVED
 C05-A02: RESOLVED
@@ -73,7 +86,7 @@ C05 Human Delivery Approval: GRANTED
 C05 Git Delivery: delivery performed by this task
 Baseline Readiness: COMPLETE
 Interview Demo Ready: NO
-Benchmark Complete: NO
+Benchmark Complete: YES
 ```
 
 Next Allowed Card indicates sequence eligibility only. Starting that Card still requires explicit human approval for that specific Card.
@@ -91,7 +104,7 @@ Next Allowed Card indicates sequence eligibility only. Starting that Card still 
 | C05 | QR Payment Initiation | COMPLETE |
 | C06 | Minimal Demo UI | COMPLETE |
 | C07 | Blockchain Ledger | COMPLETE |
-| C08 | Benchmark & Comparative Experiment | NOT_STARTED |
+| C08 | Benchmark & Comparative Experiment | COMPLETE |
 | C09 | Interview Demo & Engineering Report | NOT_STARTED |
 
 ---
@@ -223,8 +236,11 @@ Record only meaningful baseline changes.
 | 2026-09-22 | C07-A08/A09 remediated | Payment-intent ledger capture/control lock prevents mixed UI context; C06 test-module DSN validation now fails closed before fixture database activity. | Final independent re-audit is required; C07 remains IN_PROGRESS, human delivery approval/Git delivery are pending, and C08 remains NOT_STARTED/NOT_GRANTED. |
 | 2026-09-22 | C07 Final Independent Re-Audit (Post A08/A09) passed | Independent re-execution of full validation confirmed C07-A01 through C07-A09 CLOSED, new findings NONE, and Exit Gate PASS | C07 remains IN_PROGRESS; Human Delivery Approval remains NOT_GRANTED; Git Delivery remains NOT_PERFORMED; C08 remains NOT_STARTED/NOT_GRANTED; Ready for Human Delivery Approval: YES. |
 | 2026-09-22 | C07 Human Delivery Approval granted | Explicit human authorization for controlled C07 Git delivery only | C07 Git delivery is being performed by this task; C08 remains NOT_STARTED/NOT_GRANTED; CLAUDE.md excluded from delivery scope. |
-
 | 2026-09-22 | C07 completed | Controlled delivery completed on `main` after final independent re-audit PASS and human approval | C07 status: COMPLETE; delivery commit: `d22d48a9253a1cdca86e311620365915d6a04a55`; C08 remains NOT_STARTED/NOT_GRANTED; no automatic advancement occurred |
+| 2026-09-22 | C08 authorized and started | Explicit human authorization granted for C08 implementation, measured execution, tests, and self-audit only | C08 is IN_PROGRESS; C09 and Git delivery remain unauthorized |
+| 2026-09-22 | C08 implementation and self-audit passed | Full 10/100/500/1000 × 5-run matrix produced 8050 measurements per ledger, zero invalid runs, differential PASS, focused and regression verification PASS | C08 remains IN_PROGRESS pending independent audit and human delivery approval; C09 remains NOT_STARTED |
+| 2026-09-22 | C08 final independent closure re-audit passed | Independent verification reproduced the required focused, full-suite, Solidity, fuzz, and package-integrity checks with no findings; Exit Gate PASS | C08 remains IN_PROGRESS awaiting explicit human delivery approval and Git delivery; C09 remains NOT_STARTED |
+| 2026-09-22 | C08 delivery approved and completed | Human delivery approval granted after final independent closure re-audit PASS; controlled C08 delivery committed and pushed on `main` | C08 COMPLETE; C09 remains NOT_STARTED/NOT_AUTHORIZED; no automatic Card advancement occurred |
 
 ---
 

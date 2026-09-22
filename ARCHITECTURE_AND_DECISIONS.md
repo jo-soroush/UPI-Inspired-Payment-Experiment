@@ -663,7 +663,7 @@ FastAPI
 → selected LedgerInterface implementation
 ```
 
-The implemented registry contains `conventional → PaymentService(ConventionalLedger)` and `blockchain → PaymentService(BlockchainLedger)`. C07 selection uses `ledger=conventional|blockchain` at the FastAPI transport boundary. Omitted selection remains backward-compatible conventional behavior. The selector applies to payment and ledger-dependent demo reads; merchant QR identity remains ledger-independent. `Payment`, `PaymentRequest` canonical payload, request fingerprint, and `LedgerInterface` method signatures remain ledger-neutral and unchanged. C07 is implemented, remediated, and has passed its final independent re-audit (`C07-A01` through `C07-A09`: `CLOSED`); it remains `IN_PROGRESS` pending human delivery approval and is not Git-delivered.
+The implemented registry contains `conventional → PaymentService(ConventionalLedger)` and `blockchain → PaymentService(BlockchainLedger)`. C07 selection uses `ledger=conventional|blockchain` at the FastAPI transport boundary. Omitted selection remains backward-compatible conventional behavior. The selector applies to payment and ledger-dependent demo reads; merchant QR identity remains ledger-independent. `Payment`, `PaymentRequest` canonical payload, request fingerprint, and `LedgerInterface` method signatures remain ledger-neutral and unchanged. C07 is `COMPLETE`: its final independent re-audit passed, `C07-A01` through `C07-A09` are `CLOSED`, and controlled Git delivery completed at `d22d48a9253a1cdca86e311620365915d6a04a55`.
 
 ## PaymentLedger and Administrative Authority
 
@@ -678,3 +678,43 @@ Administrative fixture setup uses one owner. OpenZeppelin `Ownable` is the prefe
 Blockchain payment success means a successful Ethereum transaction receipt with successful receipt status. The transaction hash is the canonical blockchain transaction identifier exposed through ledger-neutral result and history representations. Raw Web3 objects remain inside `BlockchainLedger`.
 
 C07 retains factual execution metadata—transaction hash, receipt status, gas used, submission timestamp, and confirmation timestamp—for later C08 work. C07 does not aggregate those facts, run workloads, or draw benchmark conclusions.
+
+# 15. C08 Benchmark Implementation Boundary
+
+C08 composes a benchmark-only transparent timing adapter around each existing
+`LedgerInterface` implementation. Requests still traverse the existing
+FastAPI → `PaymentService` → ledger path; no payment, fingerprint, domain,
+conventional-ledger, blockchain-ledger, journal, API, or contract semantics are
+changed for measurement. The adapter's primary interval wraps only
+`execute_payment`, whose successful return already follows PostgreSQL commit or
+successful local-Anvil receipt. An in-process ASGI request/response interval is
+recorded separately as the secondary API metric.
+
+The fixed C08 dataset is `C001`–`C020 = 100000` öre and `M001`–`M005 = 0` öre.
+The sequential benchmark sequence uses a constant `1000` öre transfer. This is
+distinct from the 100 SEK presentation scenario: repeating that presentation
+amount for the prescribed 1000-payment workload would exhaust the fixed
+customer dataset. The 10 SEK benchmark amount was selected before measured
+execution, applied identically to both ledgers, and does not change the shared
+positive-integer payment semantics.
+
+Conventional reset recreates the exact PostgreSQL fixture. Blockchain reset
+clears the operation journal and deploys a fresh contract with all 25
+participants registered and seeded, so both active on-chain balances and
+processed-payment identity are clean. Reset, deployment, seed, initial-state
+verification, warm-up, final-state verification, and replay verification are
+outside measured timing.
+
+Normalized differential comparison retains payment status, payer and merchant
+balance deltas, history linkage, replay outcome/balance stability, and value
+conservation. It excludes transaction/hash identity, gas, receipt/event facts,
+and timing. Any mismatch is a failed comparison and retains the logical
+workload plus both raw and normalized outcomes.
+
+C08 measured evidence and qualitative analysis live under
+`evidence/benchmarks/`. Local Anvil results are not evidence for Ethereum
+mainnet latency, public congestion, gas price, validator finality, or production
+operations. C08 implementation, measured execution, self-audit, and final
+independent closure re-audit are `PASS`; findings are `NONE` and the Exit Gate
+is `PASS`. Human delivery approval was granted and controlled Git delivery is
+complete. C08 is `COMPLETE`; C09 remains `NOT_STARTED / NOT_AUTHORIZED`.

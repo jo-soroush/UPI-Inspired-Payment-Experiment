@@ -1,0 +1,1173 @@
+{
+  "aggregates": [
+    {
+      "all_balances_correct": true,
+      "all_replays_correct": true,
+      "all_transaction_linkage_correct": true,
+      "api_end_to_end_latency_ms": {
+        "average": 93.59050672,
+        "median": 101.35466650000001,
+        "p95": 109.874125
+      },
+      "confirmation_latency_ms": {
+        "average": 51.63272,
+        "median": 60.7805,
+        "p95": 63.345
+      },
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "invalid_run_count": 0,
+      "ledger_latency_ms": {
+        "average": 92.43597424,
+        "median": 100.2545415,
+        "p95": 108.450875
+      },
+      "measured_run_count": 5,
+      "submission_latency_ms": {
+        "average": 32.85414,
+        "median": 32.6665,
+        "p95": 40.881
+      },
+      "success_count": 50,
+      "successful_gas_count": 50,
+      "successful_gas_used": {
+        "average": 73559.72,
+        "median": 73553.0,
+        "p95": 82115.0
+      },
+      "throughput_payments_per_second": {
+        "average": 10.227523054444807,
+        "median": 9.862298884610981,
+        "p95": 11.390853604518242
+      },
+      "valid_run_count": 5,
+      "workload_size": 10
+    },
+    {
+      "all_balances_correct": true,
+      "all_replays_correct": true,
+      "all_transaction_linkage_correct": true,
+      "api_end_to_end_latency_ms": {
+        "average": 93.953945914,
+        "median": 101.38875,
+        "p95": 114.668416
+      },
+      "confirmation_latency_ms": {
+        "average": 50.650468000000004,
+        "median": 61.165,
+        "p95": 63.637
+      },
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "invalid_run_count": 0,
+      "ledger_latency_ms": {
+        "average": 92.656244258,
+        "median": 100.234208,
+        "p95": 113.104084
+      },
+      "measured_run_count": 5,
+      "submission_latency_ms": {
+        "average": 34.519248,
+        "median": 34.181,
+        "p95": 44.561
+      },
+      "success_count": 500,
+      "successful_gas_count": 500,
+      "successful_gas_used": {
+        "average": 65864.072,
+        "median": 65015.0,
+        "p95": 65015.0
+      },
+      "throughput_payments_per_second": {
+        "average": 10.177701294482361,
+        "median": 9.879426172795634,
+        "p95": 11.073084039095574
+      },
+      "valid_run_count": 5,
+      "workload_size": 100
+    },
+    {
+      "all_balances_correct": true,
+      "all_replays_correct": true,
+      "all_transaction_linkage_correct": true,
+      "api_end_to_end_latency_ms": {
+        "average": 95.9686589344,
+        "median": 103.185708,
+        "p95": 114.727292
+      },
+      "confirmation_latency_ms": {
+        "average": 51.953641600000005,
+        "median": 61.4835,
+        "p95": 63.75899999999999
+      },
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "invalid_run_count": 0,
+      "ledger_latency_ms": {
+        "average": 94.682968342,
+        "median": 101.9867705,
+        "p95": 113.145667
+      },
+      "measured_run_count": 5,
+      "submission_latency_ms": {
+        "average": 35.169104,
+        "median": 35.06099999999999,
+        "p95": 42.999
+      },
+      "success_count": 2500,
+      "successful_gas_count": 2500,
+      "successful_gas_used": {
+        "average": 65180.3312,
+        "median": 65015.0,
+        "p95": 65015.0
+      },
+      "throughput_payments_per_second": {
+        "average": 9.957262052402509,
+        "median": 10.025133142523583,
+        "p95": 10.167332828405515
+      },
+      "valid_run_count": 5,
+      "workload_size": 500
+    },
+    {
+      "all_balances_correct": true,
+      "all_replays_correct": true,
+      "all_transaction_linkage_correct": true,
+      "api_end_to_end_latency_ms": {
+        "average": 98.3579837284,
+        "median": 104.2385415,
+        "p95": 114.034292
+      },
+      "confirmation_latency_ms": {
+        "average": 54.4639716,
+        "median": 61.784,
+        "p95": 63.605
+      },
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "invalid_run_count": 0,
+      "ledger_latency_ms": {
+        "average": 97.08394600540001,
+        "median": 102.9641455,
+        "p95": 112.550209
+      },
+      "measured_run_count": 5,
+      "submission_latency_ms": {
+        "average": 34.965519,
+        "median": 35.2405,
+        "p95": 41.169
+      },
+      "success_count": 5000,
+      "successful_gas_count": 5000,
+      "successful_gas_used": {
+        "average": 65094.7448,
+        "median": 65015.0,
+        "p95": 65015.0
+      },
+      "throughput_payments_per_second": {
+        "average": 9.725479581680254,
+        "median": 9.76334958263587,
+        "p95": 9.851325761867054
+      },
+      "valid_run_count": 5,
+      "workload_size": 1000
+    }
+  ],
+  "generated_at": "2026-09-22T19:38:09.888109+00:00",
+  "ledger_type": "blockchain",
+  "methodology": {
+    "aggregation": "latencies and gas pooled across valid transaction records; throughput summarized across valid measured runs",
+    "api_measurement": "in-process ASGI request/response around the same payment",
+    "dataset": "C001-C020=100000 \u00f6re; M001-M005=0 \u00f6re",
+    "ledger_completion_boundary": "successful local Anvil transaction receipt",
+    "payment_amount_ore": 1000,
+    "p95_method": "nearest-rank ceil(0.95*n)",
+    "reset_and_verification_excluded": true,
+    "sequential": true,
+    "warm_up_excluded": true,
+    "warm_up_payments_per_workload": 3
+  },
+  "runs": [
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 97.0535792,
+        "median": 101.65685450000001,
+        "p95": 109.701375
+      },
+      "attempt_count": 10,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": 55.1657,
+        "median": 60.536500000000004,
+        "p95": 62.749
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 95.9219833,
+        "median": 100.496875,
+        "p95": 108.450875
+      },
+      "ledger_type": "blockchain",
+      "measured_duration_seconds": 1.013962375,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 1,
+      "submission_latency_ms": {
+        "average": 32.7347,
+        "median": 33.167,
+        "p95": 38.545
+      },
+      "success_count": 10,
+      "successful_gas_count": 10,
+      "successful_gas_used": {
+        "average": 73560.2,
+        "median": 73559.0,
+        "p95": 82115.0
+      },
+      "throughput_payments_per_second": 9.862298884610981,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 10
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 92.5661249,
+        "median": 100.97172900000001,
+        "p95": 109.070541
+      },
+      "attempt_count": 10,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": 50.6049,
+        "median": 61.501,
+        "p95": 63.345
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 91.468225,
+        "median": 99.99558350000001,
+        "p95": 107.860166
+      },
+      "ledger_type": "blockchain",
+      "measured_duration_seconds": 0.968260125,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 2,
+      "submission_latency_ms": {
+        "average": 32.9796,
+        "median": 33.149,
+        "p95": 39.580999999999996
+      },
+      "success_count": 10,
+      "successful_gas_count": 10,
+      "successful_gas_used": {
+        "average": 73561.4,
+        "median": 73559.0,
+        "p95": 82115.0
+      },
+      "throughput_payments_per_second": 10.327803182021979,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 10
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 83.89021269999999,
+        "median": 98.25412499999999,
+        "p95": 105.438625
+      },
+      "attempt_count": 10,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": 44.7818,
+        "median": 59.801,
+        "p95": 63.389
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 82.76213759999999,
+        "median": 97.197375,
+        "p95": 103.986708
+      },
+      "ledger_type": "blockchain",
+      "measured_duration_seconds": 0.877897333,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 3,
+      "submission_latency_ms": {
+        "average": 30.6733,
+        "median": 30.8425,
+        "p95": 34.952
+      },
+      "success_count": 10,
+      "successful_gas_count": 10,
+      "successful_gas_used": {
+        "average": 73559.0,
+        "median": 73559.0,
+        "p95": 82115.0
+      },
+      "throughput_payments_per_second": 11.390853604518242,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 10
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 96.7308709,
+        "median": 103.6041875,
+        "p95": 110.083042
+      },
+      "attempt_count": 10,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": 52.572199999999995,
+        "median": 62.3055,
+        "p95": 63.38399999999999
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 95.4904334,
+        "median": 102.399625,
+        "p95": 108.724209
+      },
+      "ledger_type": "blockchain",
+      "measured_duration_seconds": 1.023005042,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 4,
+      "submission_latency_ms": {
+        "average": 34.7093,
+        "median": 33.573499999999996,
+        "p95": 43.393
+      },
+      "success_count": 10,
+      "successful_gas_count": 10,
+      "successful_gas_used": {
+        "average": 73559.0,
+        "median": 73559.0,
+        "p95": 82115.0
+      },
+      "throughput_payments_per_second": 9.775122887419746,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 10
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 97.71174590000001,
+        "median": 102.05297949999999,
+        "p95": 111.769416
+      },
+      "attempt_count": 10,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": 55.039,
+        "median": 60.647999999999996,
+        "p95": 62.86
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 96.5370919,
+        "median": 100.71739600000001,
+        "p95": 110.460625
+      },
+      "ledger_type": "blockchain",
+      "measured_duration_seconds": 1.02233425,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 5,
+      "submission_latency_ms": {
+        "average": 33.1738,
+        "median": 32.6665,
+        "p95": 39.546
+      },
+      "success_count": 10,
+      "successful_gas_count": 10,
+      "successful_gas_used": {
+        "average": 73559.0,
+        "median": 73553.0,
+        "p95": 82115.0
+      },
+      "throughput_payments_per_second": 9.781536713653093,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 10
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 96.81207164,
+        "median": 101.60020850000001,
+        "p95": 111.768416
+      },
+      "attempt_count": 100,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": 54.45713,
+        "median": 61.446,
+        "p95": 63.522
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 95.59091416999999,
+        "median": 100.372479,
+        "p95": 110.326709
+      },
+      "ledger_type": "blockchain",
+      "measured_duration_seconds": 10.123800625,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 1,
+      "submission_latency_ms": {
+        "average": 33.1218,
+        "median": 33.525999999999996,
+        "p95": 40.698
+      },
+      "success_count": 100,
+      "successful_gas_count": 100,
+      "successful_gas_used": {
+        "average": 65864.6,
+        "median": 65015.0,
+        "p95": 65015.0
+      },
+      "throughput_payments_per_second": 9.877713292086884,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 100
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 93.76025919,
+        "median": 100.8352085,
+        "p95": 115.757
+      },
+      "attempt_count": 100,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": 50.145,
+        "median": 61.474000000000004,
+        "p95": 63.692
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 92.47860958999999,
+        "median": 99.726521,
+        "p95": 114.962708
+      },
+      "ledger_type": "blockchain",
+      "measured_duration_seconds": 9.807212208,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 2,
+      "submission_latency_ms": {
+        "average": 35.08554,
+        "median": 34.414,
+        "p95": 45.937
+      },
+      "success_count": 100,
+      "successful_gas_count": 100,
+      "successful_gas_used": {
+        "average": 65864.24,
+        "median": 65015.0,
+        "p95": 65015.0
+      },
+      "throughput_payments_per_second": 10.19657756751989,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 100
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 96.9331983,
+        "median": 102.269042,
+        "p95": 115.42025
+      },
+      "attempt_count": 100,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": 51.951499999999996,
+        "median": 60.798500000000004,
+        "p95": 63.586000000000006
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 95.6328229,
+        "median": 101.0366245,
+        "p95": 114.057333
+      },
+      "ledger_type": "blockchain",
+      "measured_duration_seconds": 10.140233959,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 3,
+      "submission_latency_ms": {
+        "average": 35.82992,
+        "median": 34.4435,
+        "p95": 44.732
+      },
+      "success_count": 100,
+      "successful_gas_count": 100,
+      "successful_gas_used": {
+        "average": 65863.52,
+        "median": 65015.0,
+        "p95": 65015.0
+      },
+      "throughput_payments_per_second": 9.861705400913818,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 100
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 96.44593333,
+        "median": 102.6068125,
+        "p95": 112.261875
+      },
+      "attempt_count": 100,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": 52.611509999999996,
+        "median": 61.6495,
+        "p95": 63.654
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 95.02415674,
+        "median": 101.513104,
+        "p95": 110.909833
+      },
+      "ledger_type": "blockchain",
+      "measured_duration_seconds": 10.122045375,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 4,
+      "submission_latency_ms": {
+        "average": 34.95634,
+        "median": 34.6755,
+        "p95": 44.561
+      },
+      "success_count": 100,
+      "successful_gas_count": 100,
+      "successful_gas_used": {
+        "average": 65864.0,
+        "median": 65015.0,
+        "p95": 65015.0
+      },
+      "throughput_payments_per_second": 9.879426172795634,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 100
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 85.81826711,
+        "median": 97.9470625,
+        "p95": 111.836542
+      },
+      "attempt_count": 100,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": 44.0872,
+        "median": 60.1725,
+        "p95": 63.444
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 84.55471788999999,
+        "median": 96.649896,
+        "p95": 109.936125
+      },
+      "ledger_type": "blockchain",
+      "measured_duration_seconds": 9.030907708,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 5,
+      "submission_latency_ms": {
+        "average": 33.60264,
+        "median": 33.019999999999996,
+        "p95": 44.333999999999996
+      },
+      "success_count": 100,
+      "successful_gas_count": 100,
+      "successful_gas_used": {
+        "average": 65864.0,
+        "median": 65015.0,
+        "p95": 65015.0
+      },
+      "throughput_payments_per_second": 11.073084039095574,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 100
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 93.920222698,
+        "median": 101.53985349999999,
+        "p95": 113.570167
+      },
+      "attempt_count": 500,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": 50.164016000000004,
+        "median": 61.2715,
+        "p95": 63.802
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 92.643997942,
+        "median": 100.347,
+        "p95": 112.028708
+      },
+      "ledger_type": "blockchain",
+      "measured_duration_seconds": 49.177105583,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 1,
+      "submission_latency_ms": {
+        "average": 35.034266,
+        "median": 34.635000000000005,
+        "p95": 44.247
+      },
+      "success_count": 500,
+      "successful_gas_count": 500,
+      "successful_gas_used": {
+        "average": 65180.456,
+        "median": 65015.0,
+        "p95": 65015.0
+      },
+      "throughput_payments_per_second": 10.167332828405515,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 500
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 94.3737503,
+        "median": 102.911771,
+        "p95": 115.3295
+      },
+      "attempt_count": 500,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": 49.862762000000004,
+        "median": 61.239000000000004,
+        "p95": 63.942
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 93.072830846,
+        "median": 101.659104,
+        "p95": 113.710208
+      },
+      "ledger_type": "blockchain",
+      "measured_duration_seconds": 49.431978542,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 2,
+      "submission_latency_ms": {
+        "average": 35.785095999999996,
+        "median": 35.308499999999995,
+        "p95": 44.006
+      },
+      "success_count": 500,
+      "successful_gas_count": 500,
+      "successful_gas_used": {
+        "average": 65180.48,
+        "median": 65015.0,
+        "p95": 65015.0
+      },
+      "throughput_payments_per_second": 10.114909715280236,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 500
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 96.44035374799999,
+        "median": 103.9211045,
+        "p95": 115.4955
+      },
+      "attempt_count": 500,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": 52.429428,
+        "median": 61.835,
+        "p95": 63.905
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 95.146398258,
+        "median": 102.69862499999999,
+        "p95": 114.220709
+      },
+      "ledger_type": "blockchain",
+      "measured_duration_seconds": 50.504295834,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 3,
+      "submission_latency_ms": {
+        "average": 35.136956,
+        "median": 35.442,
+        "p95": 43.041999999999994
+      },
+      "success_count": 500,
+      "successful_gas_count": 500,
+      "successful_gas_used": {
+        "average": 65180.072,
+        "median": 65015.0,
+        "p95": 65015.0
+      },
+      "throughput_payments_per_second": 9.900147932829805,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 500
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 99.888254832,
+        "median": 104.7539165,
+        "p95": 113.601125
+      },
+      "attempt_count": 500,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": 55.702524,
+        "median": 61.747,
+        "p95": 63.484
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 98.616978584,
+        "median": 103.5521665,
+        "p95": 112.204542
+      },
+      "ledger_type": "blockchain",
+      "measured_duration_seconds": 52.198678041,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 4,
+      "submission_latency_ms": {
+        "average": 35.10859,
+        "median": 35.183,
+        "p95": 41.005
+      },
+      "success_count": 500,
+      "successful_gas_count": 500,
+      "successful_gas_used": {
+        "average": 65180.648,
+        "median": 65015.0,
+        "p95": 65015.0
+      },
+      "throughput_payments_per_second": 9.578786642973405,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 500
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 95.220713094,
+        "median": 102.68072950000001,
+        "p95": 113.891959
+      },
+      "attempt_count": 500,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": 51.609478,
+        "median": 61.4335,
+        "p95": 63.547999999999995
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 93.93463607999999,
+        "median": 101.4248335,
+        "p95": 112.413458
+      },
+      "ledger_type": "blockchain",
+      "measured_duration_seconds": 49.874649333,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 5,
+      "submission_latency_ms": {
+        "average": 34.780612,
+        "median": 34.7225,
+        "p95": 42.455
+      },
+      "success_count": 500,
+      "successful_gas_count": 500,
+      "successful_gas_used": {
+        "average": 65180.0,
+        "median": 65015.0,
+        "p95": 65015.0
+      },
+      "throughput_payments_per_second": 10.025133142523583,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 500
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 97.937543729,
+        "median": 104.1601875,
+        "p95": 114.28325
+      },
+      "attempt_count": 1000,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": 54.219778,
+        "median": 61.669,
+        "p95": 63.597
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 96.65925471599999,
+        "median": 102.895875,
+        "p95": 112.647708
+      },
+      "ledger_type": "blockchain",
+      "measured_duration_seconds": 102.423865041,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 1,
+      "submission_latency_ms": {
+        "average": 34.855126,
+        "median": 35.304,
+        "p95": 41.08
+      },
+      "success_count": 1000,
+      "successful_gas_count": 1000,
+      "successful_gas_used": {
+        "average": 65094.944,
+        "median": 65015.0,
+        "p95": 65015.0
+      },
+      "throughput_payments_per_second": 9.76334958263587,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 1000
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 100.09938861399999,
+        "median": 105.22149999999999,
+        "p95": 114.537291
+      },
+      "attempt_count": 1000,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": 55.752188000000004,
+        "median": 61.813,
+        "p95": 63.589000000000006
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 98.819533575,
+        "median": 104.003479,
+        "p95": 113.004542
+      },
+      "ledger_type": "blockchain",
+      "measured_duration_seconds": 104.56957975,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 2,
+      "submission_latency_ms": {
+        "average": 35.286045,
+        "median": 35.491,
+        "p95": 41.338
+      },
+      "success_count": 1000,
+      "successful_gas_count": 1000,
+      "successful_gas_used": {
+        "average": 65094.776,
+        "median": 65015.0,
+        "p95": 65015.0
+      },
+      "throughput_payments_per_second": 9.563010603951481,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 1000
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 97.039589369,
+        "median": 103.76725049999999,
+        "p95": 113.9765
+      },
+      "attempt_count": 1000,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": 53.206014,
+        "median": 61.7945,
+        "p95": 63.527
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 95.76854945599999,
+        "median": 102.54454150000001,
+        "p95": 112.530125
+      },
+      "ledger_type": "blockchain",
+      "measured_duration_seconds": 101.50918,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 3,
+      "submission_latency_ms": {
+        "average": 34.870938,
+        "median": 35.023,
+        "p95": 41.185
+      },
+      "success_count": 1000,
+      "successful_gas_count": 1000,
+      "successful_gas_used": {
+        "average": 65094.716,
+        "median": 65015.0,
+        "p95": 65015.0
+      },
+      "throughput_payments_per_second": 9.851325761867054,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 1000
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 99.110872418,
+        "median": 104.7508335,
+        "p95": 113.384333
+      },
+      "attempt_count": 1000,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": 55.219570999999995,
+        "median": 61.864000000000004,
+        "p95": 63.61600000000001
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 97.84550124699999,
+        "median": 103.513104,
+        "p95": 111.954958
+      },
+      "ledger_type": "blockchain",
+      "measured_duration_seconds": 103.599197625,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 4,
+      "submission_latency_ms": {
+        "average": 34.975122999999996,
+        "median": 35.3815,
+        "p95": 40.815
+      },
+      "success_count": 1000,
+      "successful_gas_count": 1000,
+      "successful_gas_used": {
+        "average": 65094.668,
+        "median": 65015.0,
+        "p95": 65015.0
+      },
+      "throughput_payments_per_second": 9.652584411123716,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 1000
+    },
+    {
+      "api_end_to_end_latency_ms": {
+        "average": 97.602524512,
+        "median": 103.612833,
+        "p95": 114.007
+      },
+      "attempt_count": 1000,
+      "balances_correct": true,
+      "confirmation_latency_ms": {
+        "average": 53.922307,
+        "median": 61.7425,
+        "p95": 63.650999999999996
+      },
+      "exclusion_reason": null,
+      "failed_or_reverted_gas_count": 0,
+      "failed_or_reverted_gas_used": {
+        "average": null,
+        "median": null,
+        "p95": null
+      },
+      "failure_count": 0,
+      "ledger_latency_ms": {
+        "average": 96.326891033,
+        "median": 102.4534165,
+        "p95": 112.403334
+      },
+      "ledger_type": "blockchain",
+      "measured_duration_seconds": 102.070734,
+      "no_partial_transfer": true,
+      "replay_correct": true,
+      "run_number": 5,
+      "submission_latency_ms": {
+        "average": 34.840362999999996,
+        "median": 35.013999999999996,
+        "p95": 41.516999999999996
+      },
+      "success_count": 1000,
+      "successful_gas_count": 1000,
+      "successful_gas_used": {
+        "average": 65094.62,
+        "median": 65015.0,
+        "p95": 65015.0
+      },
+      "throughput_payments_per_second": 9.797127548823152,
+      "transaction_linkage_correct": true,
+      "valid": true,
+      "workload_size": 1000
+    }
+  ],
+  "schema_version": 1
+}

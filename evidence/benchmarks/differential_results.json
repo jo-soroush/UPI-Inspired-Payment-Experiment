@@ -1,0 +1,14 @@
+{
+  "compared_run_count": 20,
+  "comparison": "PASS",
+  "excluded_fields": [
+    "transaction_id",
+    "gas",
+    "timing",
+    "receipt_or_event_metadata"
+  ],
+  "invalid_run_count": 0,
+  "invalid_runs": [],
+  "mismatch_count": 0,
+  "mismatches": []
+}
