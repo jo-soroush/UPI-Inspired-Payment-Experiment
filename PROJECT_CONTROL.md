@@ -11,10 +11,10 @@ It should stay short and current.
 
 ```text
 Project: UPI-Inspired Payment Experiment
-Overall Status: IN_PROGRESS
+Overall Status: COMPLETE
 Active Card: NONE
-Last Completed Card: C08
-Next Allowed Card: C09
+Last Completed Card: C09
+Next Allowed Card: NONE
 Execution Authorization: NONE
 C02 Authorization: CLOSED/COMPLETED
 C03 Authorization: CLOSED/COMPLETED
@@ -23,10 +23,10 @@ C05 Authorization: CLOSED/COMPLETED
 C06 Authorization: CLOSED/COMPLETED
 C07 Authorization: CLOSED/COMPLETED
 C08 Authorization: CLOSED/COMPLETED
-C09 Authorization: NOT_GRANTED
+C09 Authorization: CLOSED/COMPLETED
 Current Branch: main
 Current Blocker: NONE
-Current Work: C08 delivery COMPLETE; C09 remains NOT_STARTED pending explicit authorization
+Current Work: C09 interview/demo packaging and engineering report delivery COMPLETE; no active Card
 C06 Phase 1 Verification: PASS
 C06 Final Independent Re-Audit: PASS
 C06 Findings: NONE
@@ -75,6 +75,15 @@ C08 Exit Gate: PASS
 C08 Ready for Human Delivery Approval: YES
 C08 Human Delivery Approval: GRANTED
 C08 Git Delivery: COMPLETE
+C09 Card Status: COMPLETE
+C09 Phase 1 Verification: PASS
+C09 Self-Audit: PASS
+C09 Independent Audit: PASS
+C09 Findings: NONE
+C09 Exit Gate: PASS
+C09 Ready for Human Delivery Approval: YES
+C09 Human Delivery Approval: GRANTED
+C09 Git Delivery: COMPLETE
 C05 Final Independent Re-Audit: PASS
 C05-A01: RESOLVED
 C05-A02: RESOLVED
@@ -85,7 +94,7 @@ C05 Ready for Human Delivery Approval: YES
 C05 Human Delivery Approval: GRANTED
 C05 Git Delivery: delivery performed by this task
 Baseline Readiness: COMPLETE
-Interview Demo Ready: NO
+Interview Demo Ready: YES
 Benchmark Complete: YES
 ```
 
@@ -105,7 +114,7 @@ Next Allowed Card indicates sequence eligibility only. Starting that Card still 
 | C06 | Minimal Demo UI | COMPLETE |
 | C07 | Blockchain Ledger | COMPLETE |
 | C08 | Benchmark & Comparative Experiment | COMPLETE |
-| C09 | Interview Demo & Engineering Report | NOT_STARTED |
+| C09 | Interview Demo & Engineering Report | COMPLETE |
 
 ---
 
@@ -241,6 +250,8 @@ Record only meaningful baseline changes.
 | 2026-09-22 | C08 implementation and self-audit passed | Full 10/100/500/1000 × 5-run matrix produced 8050 measurements per ledger, zero invalid runs, differential PASS, focused and regression verification PASS | C08 remains IN_PROGRESS pending independent audit and human delivery approval; C09 remains NOT_STARTED |
 | 2026-09-22 | C08 final independent closure re-audit passed | Independent verification reproduced the required focused, full-suite, Solidity, fuzz, and package-integrity checks with no findings; Exit Gate PASS | C08 remains IN_PROGRESS awaiting explicit human delivery approval and Git delivery; C09 remains NOT_STARTED |
 | 2026-09-22 | C08 delivery approved and completed | Human delivery approval granted after final independent closure re-audit PASS; controlled C08 delivery committed and pushed on `main` | C08 COMPLETE; C09 remains NOT_STARTED/NOT_AUTHORIZED; no automatic Card advancement occurred |
+| 2026-09-22 | C09 Phase 1 authorized and started | Explicit human authorization granted for interview/demo packaging, verification, and self-audit only | C09 IN_PROGRESS; human delivery approval NOT_GRANTED; Git delivery NOT_PERFORMED |
+| 2026-09-23 | C09 delivery approved and completed | Independent C09 audit PASS with findings NONE and Exit Gate PASS; explicit human delivery approval granted; controlled Git delivery completed on `main` | C09 COMPLETE; all defined Cards COMPLETE; immutable delivery SHA is reported in the final Git delivery output |
 
 ---
 

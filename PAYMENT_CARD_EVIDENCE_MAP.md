@@ -3066,7 +3066,9 @@ other work. No automatic Card advancement occurred.
 
 ## Status
 
-`NOT_STARTED`
+`COMPLETE — Phase 1, independent audit, human approval, and controlled delivery PASS`
+
+Explicit human authorization for C09 Phase 1 was granted on 2026-09-22 after C08 delivery. This authorization does not grant human delivery approval, Git delivery, or a later Card. Current live execution state is owned by `PROJECT_CONTROL.md`.
 
 ## Goal
 
@@ -3175,19 +3177,46 @@ I formed conclusions from the evidence and documented the limitations.
 
 ## Actual implementation
 
-`NOT YET EXECUTED`
+Phase 1 packaged the delivered prototype without changing its behavior:
+
+- `README.md` was rewritten as the public landing page with the implemented shared payment flow, observed fixture, actual setup/build/bootstrap/server commands, C08 result summary, interpretation limits, and links to primary evidence.
+- `DEMO_RUNBOOK.md` was created with separate pre-demo setup, a 2–3 minute two-ledger walkthrough, safe reset instructions, optional local receipt inspection, and a bounded interview narrative.
+- `ENGINEERING_REPORT.md` was created with the required 18 sections, a Mermaid diagram of the implemented architecture, decision rationale, measured C08 table, normalized differential outcome, separate qualitative trade-offs, and primary evidence references.
+- The C09 record in this Evidence Map and the live state in `PROJECT_CONTROL.md` were updated. No application, frontend, contract, test, benchmark methodology, or benchmark evidence file was edited for C09.
+
+The acceptance basis was the C09 goal/deliverables in `UPI_PAYMENT_INTERVIEW_ROADMAP.md`, the Exit Gate below, `AGENTS.md` scope/evidence rules, the actual source and bootstrap interfaces, and `BENCHMARK_AND_EXPERIMENT_PLAN.md` for measured claims. Traceability: setup commands → `pyproject.toml`, `package.json`, `compose.yaml`, `demo_bootstrap.py`, `blockchain_bootstrap.py`, and `demo_app.py`; demo behavior → `frontend/app.ts`, `api.py`, live API/browser observations below; architecture → `ledger.py`, `payment_service.py`, both ledger adapters and the architecture record; results → C08 aggregate JSON, raw records, differential JSON, and qualitative comparison under `evidence/benchmarks/`.
 
 ## Demo evidence
 
-`NOT YET EXECUTED`
+On 2026-09-22, using the documented local `upi_payment_test` database and a fresh Anvil chain ID 31337:
+
+- `docker compose up -d postgres`, `upi-demo-bootstrap`, `forge build`, `upi-blockchain-bootstrap`, and `uvicorn upi_payment_experiment.demo_app:create_demo_app --factory` executed successfully. The server reported `http://127.0.0.1:8000/`. The contract bootstrap deployed a fresh address and seeded the C001/M001 fixture. Test keys were kept out of repository files.
+- Before payment, the live API returned `C001=100000` and `M001=0` öre on **both** ledger selections. A real HTTP `POST /payments?ledger=conventional` for 10000 öre returned `SUCCESS`; subsequent balance reads returned `90000/10000`, and history linked the payment to a conventional transaction ID. The equivalent real HTTP blockchain POST returned `SUCCESS`, `90000/10000`, and a blockchain transaction-hash history entry.
+- `cast receipt` for the observed local blockchain transaction returned status `1 (success)` and `82115` gas used. This is a **single C09 demo receipt**, not a new benchmark measurement or a public-chain cost claim.
+- A real browser smoke at the served UI showed the merchant QR, conventional balances/history after the API payment, and blockchain balances/history after selecting Blockchain. Live `GET /merchants/M001/qr` returned HTTP 200 with `image/png`. The browser's Pay button was **not clicked** in this smoke; payment submission was verified through the live HTTP API and existing UI tests. The UI exposes transaction hash and local request time, not receipt/gas fields.
+- Documented Python editable install, `npm run build`, Foundry build, database bootstrap, blockchain bootstrap, and Uvicorn invocation were executed. The first `npm ci` attempt was blocked by ownership of the user's existing npm cache; `npm ci --cache /tmp/upi-payment-npm-cache` succeeded, followed by a clean frontend build. This was an environment cache issue, not an application defect.
+
+Verification after documentation work: `.venv/bin/python -m pytest -q` → **195 passed**; `npm run test:frontend` → **11 passed**; `forge test --offline` → **10 passed**, including **256 fuzz runs**; `.venv/bin/python -m pip check` → **PASS**. The complete C08 benchmark matrix was **not rerun**; existing immutable C08 artifacts were inspected directly. Documentation diff and whitespace validation are part of the Phase 1 self-audit below.
 
 ## Final lessons
 
-`NOT YET EXECUTED`
+The executable demo needs two independently initialized fixtures: resetting PostgreSQL does not reset an existing on-chain contract. The live UI's request timer and C08's ledger-only completion timing answer different questions. The UI shows a blockchain hash; receipt status/gas require separate local-chain inspection. The benchmark's 10 SEK measured payment must not be confused with the interview demo's 100 SEK payment. All four distinctions are now explicit in the public docs and report.
+
+## Phase 1 self-audit and delivery boundary
+
+Documentation/source/evidence cross-check and `git diff --check` found no C09 product-scope expansion, protected C02–C08 implementation/test changes, benchmark regeneration, or unsupported mainnet/production claim. The C09 Exit Gate has **not** been independently assessed or marked `PASS` in this Phase 1 record. The documentation and live demo evidence support `READY_FOR_INDEPENDENT_AUDIT`, subject to that separate audit. Human Delivery Approval: `NOT_GRANTED`. Git Delivery: `NOT_PERFORMED`. C09 remains `IN_PROGRESS`.
 
 ## Exit Gate
 
 The project can be demonstrated and explained without relying on undocumented assumptions.
+
+## Independent Audit and Controlled Delivery — 2026-09-23
+
+- Phase 1 Verification: `PASS`; Self-Audit: `PASS`.
+- Independent Audit: `PASS`; blocking findings: `NONE`; Exit Gate: `PASS`; Ready for Human Delivery Approval: `YES`.
+- Independent verification confirmed README usability, demo runbook, engineering report, architecture diagram, benchmark traceability, conventional and blockchain live execution, Python **195 passed**, frontend **11 passed**, Solidity **10 passed** including **256 fuzz runs**, package integrity, and `git diff --check`. The README/runbook setup was independently exercised. Browser/UI verification was partial but honestly documented and **NON-BLOCKING**: the browser Pay button was not independently clicked; do not infer otherwise from API execution or UI tests.
+- The auditor noted only non-blocking observations: manually copying Anvil test private keys is documented but mildly tedious, and per-run local-Anvil gas variation is expected and distinguished from benchmark aggregates. No benchmark, methodology, architecture, payment, security, or documentation defect remained.
+- Human Delivery Approval: `GRANTED` explicitly for C09 controlled Git delivery only. Controlled Git Delivery: `COMPLETE` on `main`; C09 Status: `COMPLETE`. No protected C02–C08 implementation, existing test, or C08 benchmark evidence was changed; `CLAUDE.md` was excluded. No future Card was started or authorized. The immutable delivery SHA is reported in the final Git delivery output, not embedded in this commit.
 
 ---
 
