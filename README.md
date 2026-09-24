@@ -74,6 +74,18 @@ Open <http://127.0.0.1:8000/>. The page starts on **Conventional** and shows `C0
 
 The UI is a presentation layer, not a QR scanner or wallet. It displays a real generated merchant QR; entering the amount and submitting in the browser simulates initiation. See the [2–3 minute demo runbook](DEMO_RUNBOOK.md) for a timed walkthrough and reset procedure.
 
+## Demo screenshots
+
+**Conventional ledger — successful 100 SEK payment**
+
+![Conventional demo showing SUCCESS, final balances, and transaction history](docs/images/demo-conventional.png)
+
+**Blockchain ledger — successful 100 SEK payment**
+
+![Blockchain demo showing SUCCESS, final balances, transaction hash, and history](docs/images/demo-blockchain.png)
+
+These screenshots illustrate the demo UI; they are not benchmark evidence.
+
 ## Controlled comparison
 
 C08 ran the same deterministic 20-customer/5-merchant dataset, sequential logical payment sequence, and reset rule against both ledgers: workloads of 10, 100, 500, and 1000 payments, each repeated five times. There were **8050 measured successful payments per ledger**, **zero payment failures**, **zero invalid runs**, and **zero normalized differential mismatches** across 20 paired runs. The 1000-payment workload's average ledger-only latency was **6.399 ms** for PostgreSQL commit and **97.084 ms** for local-Anvil receipt; average run throughput was **130.429** and **9.725 payments/s**, respectively. These are observed local results, not a universal performance ranking.
